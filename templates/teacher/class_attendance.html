@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Class Attendance{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">
+        <i class="material-icons align-middle">list_alt</i>
+        Class Attendance Report
+    </h2>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Filter</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET">
+                <div class="row">
+                    <div class="col-md-5">
+                        <label for="subject_id" class="form-label">Subject</label>
+                        <select class="form-select" name="subject_id" id="subject_id">
+                            <option value="">Select Subject</option>
+                            {% for subject in subjects %}
+                            <option value="{{ subject.id }}" {% if selected_subject and selected_subject.id==subject.id
+                                %}selected{% endif %}>
+                                {{ subject.code }} - {{ subject.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label for="date" class="form-label">Date</label>
+                        <input type="date" class="form-control" name="date" id="date" value="{{ attendance_date }}">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="material-icons align-middle">search</i> View
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if selected_subject %}
+    <div class="card">
+        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">{{ selected_subject.name }} - {{ attendance_date }}</h5>
+            <a href="{{ url_for('teacher.download_report', subject_id=selected_subject.id, date=attendance_date) }}"
+                class="btn btn-light btn-sm">
+                <i class="material-icons align-middle">download</i> Download CSV
+            </a>
+        </div>
+        <div class="card-body p-0">
+            {% if records %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Marked At</th>
+                            <th>Confidence</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in records %}
+                        <tr>
+                            <td><strong>{{ record.student_code }}</strong></td>
+                            <td>{{ record.student_name }}</td>
+                            <td>
+                                {% if record.status == 'PRESENT' %}
+                                <span class="badge bg-success">PRESENT</span>
+                                {% elif record.status == 'LATE' %}
+                                <span class="badge bg-warning">LATE</span>
+                                {% elif record.status == 'ABSENT' %}
+                                <span class="badge bg-danger">ABSENT</span>
+                                {% else %}
+                                <span class="badge bg-secondary">NOT MARKED</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ record.marked_at if record.marked_at else 'N/A' }}</td>
+                            <td>
+                                {% if record.confidence %}
+                                {{ (record.confidence * 100)|round(2) }}%
+                                {% else %}
+                                N/A
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="material-icons">event_busy</i>
+                <p>No attendance records found for this date</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

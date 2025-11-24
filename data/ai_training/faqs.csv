@@ -1,0 +1,51 @@
+question,answer,category
+Who teaches Data Structures?,Dr. Rajesh Kumar teaches Data Structures and Algorithms,faculty
+Who is the Operating Systems professor?,Prof. Anjali Sharma teaches Operating Systems,faculty
+Who teaches Database Management?,Dr. Vikram Singh teaches Database Management Systems,faculty
+Who is teaching Web Technologies?,Prof. Meera Nair teaches Web Technologies,faculty
+What is the minimum attendance required?,75% attendance is mandatory for appearing in semester exams,policy
+Can I appear for exams if my attendance is below 75%?,No you cannot appear for exams if your attendance is below 75%. You may need special permission from the Dean,policy
+How is attendance calculated?,Attendance percentage is calculated as (Present + Late) / Total Classes * 100,policy
+What happens if I am late?,Late arrivals are still counted as present but marked separately,policy
+When is the Data Structures class?,Data Structures is on Monday at 9:00 AM Wednesday at 9:00 AM and Friday at 10:00 AM,timetable
+When is the Operating Systems class?,Operating Systems is on Monday at 10:00 AM and Tuesday at 10:00 AM,timetable
+What time is Database Management?,Database Management is on Monday at 11:30 AM and Wednesday at 10:00 AM,timetable
+When is Web Technologies class?,Web Technologies is on Tuesday at 9:00 AM and Friday at 9:00 AM,timetable
+What is CS501?,CS501 is Data Structures and Algorithms - a 4 credit course,subjects
+What is CS502?,CS502 is Operating Systems - a 4 credit course covering process management memory management and file systems,subjects
+Tell me about CS503,CS503 is Database Management Systems - a 4 credit course covering relational databases SQL and normalization,subjects
+What is CS504?,CS504 is Web Technologies - a 3 credit course covering HTML CSS JavaScript Flask and React,subjects
+What is CS505?,CS505 is Computer Networks - a 4 credit course covering network protocols TCP/IP and network security,subjects
+Where is Dr. Rajesh Kumar's office?,Dr. Rajesh Kumar's office is in room CS-301,faculty
+How can I contact Prof. Anjali Sharma?,You can reach Prof. Anjali Sharma at anjali.sharma@college.edu or call 9876543211. Office: CS-302,faculty
+What is Dr. Vikram Singh's specialization?,Dr. Vikram Singh specializes in Database Management and Software Engineering,faculty
+Where is Prof. Meera Nair's office?,Prof. Meera Nair's office is in room CS-304,faculty
+How many credits is Data Structures?,Data Structures (CS501) is a 4 credit course,subjects
+What room is Data Structures in?,Data Structures classes are held in Room 101,timetable
+What room is Operating Systems in?,Operating Systems classes are in Room 102,timetable
+Which room for Database Management?,Database Management classes are held in Room 103,timetable
+How many classes do I need to attend to get 75%?,This depends on your current attendance. The system can calculate exactly how many classes you need based on your current records,policy
+What if I miss a class?,Each missed class will reduce your attendance percentage. Make sure to attend regularly to maintain the 75% minimum,policy
+Can attendance be marked manually?,Yes teachers can manually mark attendance in case of face recognition errors or technical issues,policy
+How does face recognition work?,The system uses your registered face photo to automatically mark attendance when you are detected in class,system
+What if face recognition fails?,If face recognition fails the teacher can manually mark your attendance,system
+Can I update my face photo?,Yes teachers or admins can update your face encoding through the face management system,system
+What subjects are in semester 5?,Semester 5 includes Data Structures Operating Systems Database Management Web Technologies and Computer Networks,subjects
+Who is the department head?,This information should be available from the administration,general
+What are college timings?,Regular classes run from 9:00 AM to 4:00 PM Monday through Friday,general
+Is there a lab for Web Technologies?,Yes Web Technologies includes practical lab sessions,subjects
+What is the exam pattern?,This information is available in the course syllabus and academic calendar,general
+When are the mid-term exams?,Please check the academic calendar for exact exam dates,general
+How do I improve my attendance?,You need to attend more classes regularly. The system shows exactly how many consecutive classes you need to attend,policy
+What percentage do I have?,You can check your current attendance percentage on your student dashboard,system
+Can I see subject-wise attendance?,Yes your dashboard shows attendance breakdown for each subject,system
+How do I download attendance report?,You can download your attendance report as CSV or PDF from your student dashboard,system
+What is considered late?,Arriving after the scheduled class start time but before a certain threshold (usually 10 minutes) is marked as late,policy
+Are there any attendance relaxations?,Any relaxations or special cases must be approved by the department head or Dean,policy
+What if I have medical emergency?,Medical emergencies require proper documentation and approval from the administration,policy
+How often is attendance taken?,Attendance is typically taken at the start of each class session,general
+Can I check my attendance history?,Yes you can view your complete attendance history in your student portal,system
+What is my student ID?,Your student ID is displayed on your profile page in the student dashboard,system
+How do I contact my teacher?,Teacher contact information including email and office numbers is available in the subjects section,faculty
+What is the attendance policy for online classes?,Please check with your department for specific online attendance policies,policy
+Can parents see my attendance?,This depends on the system configuration. Contact administration for details,general

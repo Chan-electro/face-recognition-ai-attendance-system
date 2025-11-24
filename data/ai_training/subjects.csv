@@ -1,0 +1,6 @@
+code,name,description,credits,faculty
+CS501,Data Structures and Algorithms,Advanced data structures including trees graphs and hash tables. Algorithm design and analysis,4,Dr. Rajesh Kumar
+CS502,Operating Systems,Process management memory management file systems and system calls,4,Prof. Anjali Sharma
+CS503,Database Management Systems,Relational database design SQL queries normalization and transaction management,4,Dr. Vikram Singh
+CS504,Web Technologies,Modern web development with HTML CSS JavaScript and frameworks like Flask and React,3,Prof. Meera Nair
+CS505,Computer Networks,Network protocols TCP/IP architecture network security and distributed systems,4,Prof. Anjali Sharma

@@ -1,0 +1,44 @@
+Q: What is the college attendance policy?
+A: Students must maintain a minimum of 75% attendance in each subject to be eligible for appearing in the semester examinations. This is a strict requirement set by the university and the college administration.
+
+Q: How is attendance percentage calculated?
+A: Attendance percentage is calculated as: (Number of classes attended + Late arrivals) divided by Total number of classes held, multiplied by 100. Late arrivals are counted as present but tracked separately.
+
+Q: What if my attendance falls below 75%?
+A: If your attendance falls below 75%, you will not be eligible to appear for the semester examinations. You may need to seek special permission from the Dean with valid documentation such as medical certificates for extended illness.
+
+Q: Are there any relaxations for medical emergencies?
+A: Yes, medical emergencies are considered for attendance relaxation, but you must submit proper medical certificates and documentation to the department head within 7 days of your absence.
+
+Q: What about attendance for online classes?
+A: For online classes, attendance is marked through virtual presence verification. The same 75% minimum requirement applies to online classes as well.
+
+Q: Can I make up for missed classes?
+A: No, there is no formal mechanism to make up for missed classes. However, you can attend extra classes or remedial sessions when offered by the faculty.
+
+Q: What happens if I am late to class?
+A: If you arrive within the first 10 minutes of class, you will be marked as "Late" which still counts toward attendance. Arriving more than 10 minutes after the start may result in being marked absent, at the teacher's discretion.
+
+Q: How often is attendance recorded?
+A: Attendance is recorded for every scheduled class session. This includes both theory and practical/lab sessions.
+
+Q: Can teachers manually override attendance?
+A: Yes, teachers have the authority to manually mark or modify attendance in cases of technical errors, face recognition failures, or special circumstances.
+
+Q: What if the face recognition system fails?
+A: If the face recognition system fails to identify you, inform the teacher immediately. They can manually mark your attendance for that session.
+
+Q: How can I check my attendance?
+A: You can check your attendance percentage and detailed records through your student dashboard. The dashboard shows overall attendance as well as subject-wise breakdown.
+
+Q: Will I be notified if my attendance is low?
+A: The system provides warnings when your attendance falls below 80%. However, it is your responsibility to monitor and maintain the required attendance.
+
+Q: What is the grace period for attendance?
+A: There is no official grace period. The 75% minimum is strict. However, some departments may consider special cases with proper documentation and approval from higher authorities.
+
+Q: Does attendance affect my grades?
+A: While attendance doesn't directly add to your grade calculation, it is a prerequisite for appearing in exams. Some courses may have participation marks that are linked to attendance.
+
+Q: Can I appeal an attendance decision?
+A: Yes, you can submit an appeal to the department head with supporting documentation if you believe there has been an error in attendance recording. Appeals must be made within 48 hours of the discrepancy.

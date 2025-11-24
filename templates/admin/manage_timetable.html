@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Timetable{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">
+        <i class="material-icons align-middle">schedule</i>
+        Timetable Management
+    </h2>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Add Timetable Entry</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin.add_timetable_entry') }}">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label class="form-label">Subject</label>
+                        <select class="form-select" name="subject_id" required>
+                            {% for subject in subjects %}
+                            <option value="{{ subject.id }}">{{ subject.code }} - {{ subject.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Day</label>
+                        <select class="form-select" name="day_of_week" required>
+                            <option value="MONDAY">Monday</option>
+                            <option value="TUESDAY">Tuesday</option>
+                            <option value="WEDNESDAY">Wednesday</option>
+                            <option value="THURSDAY">Thursday</option>
+                            <option value="FRIDAY">Friday</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Start Time</label>
+                        <input type="time" class="form-control" name="start_time" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">End Time</label>
+                        <input type="time" class="form-control" name="end_time" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Room</label>
+                        <input type="text" class="form-control" name="room" required>
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">Add</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">Weekly Schedule</h5>
+        </div>
+        <div class="card-body">
+            {% for day in days %}
+            <h5 class="mt-3">{{ day.capitalize() }}</h5>
+            {% if schedule[day] %}
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Time</th>
+                            <th>Subject</th>
+                            <th>Room</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in schedule[day] %}
+                        <tr>
+                            <td>{{ entry.start_time.strftime('%H:%M') }} - {{ entry.end_time.strftime('%H:%M') }}</td>
+                            <td>{{ entry.subject.code }} - {{ entry.subject.name }}</td>
+                            <td>{{ entry.room }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-danger" onclick="deleteEntry({{ entry.id }})">
+                                    <i class="material-icons" style="font-size: 14px;">delete</i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No classes</p>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    async function deleteEntry(entryId) {
+        if (!confirm('Delete this timetable entry?')) return;
+
+        try {
+            const response = await fetch(`/admin/timetable/${entryId}/delete`, { method: 'POST' });
+            const result = await response.json();
+
+            if (result.success) {
+                showToast(result.message, 'success');
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                showToast(result.message, 'danger');
+            }
+        } catch (error) {
+            showToast('Error occurred', 'danger');
+        }
+    }
+</script>
+{% endblock %}

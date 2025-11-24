@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Subjects - Admin{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">
+        <i class="material-icons align-middle">book</i>
+        Subject Management
+    </h2>
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">All Subjects</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Faculty</th>
+                            <th>Credits</th>
+                            <th>Semester</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subject in subjects %}
+                        <tr>
+                            <td><strong>{{ subject.code }}</strong></td>
+                            <td>{{ subject.name }}</td>
+                            <td>{{ subject.faculty.name if subject.faculty else 'Not assigned' }}</td>
+                            <td>{{ subject.credits }}</td>
+                            <td>{{ subject.semester }}</td>
+                            <td>
+                                {% if subject.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Subjects{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">
+        <i class="material-icons align-middle">book</i>
+        Subjects & Faculty
+    </h2>
+
+    <div class="row">
+        {% for subject in subjects %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{{ subject.code }}</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title">{{ subject.name }}</h6>
+                    <p class="card-text text-muted">{{ subject.description }}</p>
+
+                    <hr>
+
+                    <p class="mb-1">
+                        <strong><i class="material-icons align-middle">person</i> Faculty:</strong>
+                        {% if subject.faculty %}
+                        {{ subject.faculty.name }}
+                        {% else %}
+                        Not assigned
+                        {% endif %}
+                    </p>
+
+                    <p class="mb-1">
+                        <strong><i class="material-icons align-middle">stars</i> Credits:</strong>
+                        {{ subject.credits }}
+                    </p>
+
+                    {% if subject.id in attendance_map %}
+                    <hr>
+                    <p class="mb-1">
+                        <strong><i class="material-icons align-middle">event_available</i> Your Attendance:</strong>
+                        <span
+                            class="badge {% if attendance_map[subject.id]['percentage'] >= 75 %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ attendance_map[subject.id]['percentage'] }}%
+                        </span>
+                    </p>
+                    <p class="mb-0 small">
+                        Present: {{ attendance_map[subject.id]['present'] }} |
+                        Absent: {{ attendance_map[subject.id]['absent'] }} |
+                        Late: {{ attendance_map[subject.id]['late'] }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

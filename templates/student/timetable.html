@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Timetable{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">
+        <i class="material-icons align-middle">schedule</i>
+        Class Timetable - Semester {{ user.semester }}
+    </h2>
+
+    <div class="card">
+        <div class="card-body">
+            {% for day in days %}
+            <h5 class="mt-4 mb-3">{{ day.capitalize() }}</h5>
+            {% if schedule[day] %}
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Time</th>
+                            <th>Subject Code</th>
+                            <th>Subject Name</th>
+                            <th>Faculty</th>
+                            <th>Room</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in schedule[day] %}
+                        <tr>
+                            <td>{{ entry.start_time }} - {{ entry.end_time }}</td>
+                            <td><strong>{{ entry.subject_code }}</strong></td>
+                            <td>{{ entry.subject_name }}</td>
+                            <td>{{ entry.faculty_name }}</td>
+                            <td>{{ entry.room }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No classes scheduled</p>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

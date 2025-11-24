@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="material-icons align-middle">dashboard</i>
+                Welcome, {{ user.full_name }}
+            </h1>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card text-white {% if is_below_minimum %}bg-danger{% else %}bg-success{% endif %} h-100">
+                <div class="card-body">
+                    <h6 class="card-title">Overall Attendance</h6>
+                    <h2 class="mb-0">{{ overall_stats.percentage }}%</h2>
+                    <small>{{ overall_stats.present + overall_stats.late }} / {{ overall_stats.total }} classes</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title">Present</h6>
+                    <h2 class="mb-0">{{ overall_stats.present }}</h2>
+                    <small>Classes attended</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title">Late</h6>
+                    <h2 class="mb-0">{{ overall_stats.late }}</h2>
+                    <small>Late arrivals</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-danger text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title">Absent</h6>
+                    <h2 class="mb-0">{{ overall_stats.absent }}</h2>
+                    <small>Missed classes</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if is_below_minimum %}
+    <div class="alert alert-danger" role="alert">
+        <i class="material-icons align-middle">warning</i>
+        <strong>Warning!</strong> Your attendance is below the minimum requirement of {{ min_attendance }}%.
+        You may not be eligible for exams. Please attend classes regularly.
+    </div>
+    {% endif %}
+
+    <!-- Subject-wise Attendance -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="material-icons align-middle">bar_chart</i> Subject-wise Attendance</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="attendanceChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="material-icons align-middle">list</i> Subject Details</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Subject Code</th>
+                                    <th>Subject Name</th>
+                                    <th>Present</th>
+                                    <th>Absent</th>
+                                    <th>Late</th>
+                                    <th>Percentage</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subject in subject_attendance %}
+                                <tr>
+                                    <td><strong>{{ subject.subject_code }}</strong></td>
+                                    <td>{{ subject.subject_name }}</td>
+                                    <td><span class="badge bg-success">{{ subject.present }}</span></td>
+                                    <td><span class="badge bg-danger">{{ subject.absent }}</span></td>
+                                    <td><span class="badge bg-warning">{{ subject.late }}</span></td>
+                                    <td>
+                                        <strong
+                                            class="{% if subject.percentage >= min_attendance %}text-success{% else %}text-danger{% endif %}">
+                                            {{ subject.percentage }}%
+                                        </strong>
+                                    </td>
+                                    <td>
+                                        {% if subject.percentage >= min_attendance %}
+                                        <span class="badge bg-success">✓ OK</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">⚠ Low</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links & Recent Attendance -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="material-icons align-middle">link</i> Quick Links</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('student.ai_assistant') }}" class="btn btn-outline-primary">
+                            <i class="material-icons align-middle">smart_toy</i> Ask AI Assistant
+                        </a>
+                        <a href="{{ url_for('student.timetable') }}" class="btn btn-outline-info">
+                            <i class="material-icons align-middle">schedule</i> View Timetable
+                        </a>
+                        <a href="{{ url_for('student.attendance') }}" class="btn btn-outline-secondary">
+                            <i class="material-icons align-middle">history</i> Attendance History
+                        </a>
+                        <a href="{{ url_for('student.subjects') }}" class="btn btn-outline-success">
+                            <i class="material-icons align-middle">book</i> View Subjects
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="material-icons align-middle">schedule</i> Recent Attendance</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for record in recent_attendance %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ record.subject_name }}</h6>
+                                <small>{{ record.date }}</small>
+                            </div>
+                            <p class="mb-1">
+                                <span
+                                    class="badge bg-{{ 'success' if record.status == 'PRESENT' else ('warning' if record.status == 'LATE' else 'danger') }}">
+                                    {{ record.status }}
+                                </span>
+                                at {{ record.time }}
+                            </p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Chart.js for subject-wise attendance
+    const ctx = document.getElementById('attendanceChart');
+    if (ctx) {
+        const data = {
+            labels: [{% for s in subject_attendance %}'{{ s.subject_code }}', {% endfor %}],
+    datasets: [{
+        label: 'Attendance %',
+        data: [{% for s in subject_attendance %}{{ s.percentage }}, {% endfor %}],
+        backgroundColor: [{% for s in subject_attendance %}'{% if s.percentage >= 75 %}rgba(25, 135, 84, 0.7){% else %}rgba(220, 53, 69, 0.7){% endif %}', {% endfor %}],
+    borderColor: [{% for s in subject_attendance %}'{% if s.percentage >= 75 %}rgba(25, 135, 84, 1){% else %}rgba(220, 53, 69, 1){% endif %}', {% endfor %}],
+    borderWidth: 1
+        }]
+    };
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: data,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function (value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}AI Training - Admin{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">
+        <i class="material-icons align-middle">psychology</i>
+        AI Training Data Management
+    </h2>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Upload Training Data</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin.upload_training_data') }}"
+                        enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="file" class="form-label">Select File (CSV or TXT)</label>
+                            <input class="form-control" type="file" id="file" name="file" accept=".csv,.txt" required>
+                            <div class="form-text">Upload FAQ CSV files or policy TXT files for the AI model to learn
+                                from.</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="material-icons align-middle">upload</i> Upload File
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Training Files</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if training_files %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Filename</th>
+                                    <th>Size</th>
+                                    <th>Last Modified</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for file in training_files %}
+                                <tr>
+                                    <td><i class="material-icons align-middle">description</i> {{ file.name }}</td>
+                                    <td>{{ (file.size / 1024)|round(2) }} KB</td>
+                                    <td>{{ file.modified.strftime('%Y-%m-%d %H:%M') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="material-icons">folder_open</i>
+                        <p>No training files found</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">AI Model Status</h5>
+                </div>
+                <div class="card-body">
+                    {% if ai_stats %}
+                    <p><strong>Status:</strong>
+                        {% if ai_stats.is_trained %}
+                        <span class="badge bg-success">Trained</span>
+                        {% else %}
+                        <span class="badge bg-warning">Not Trained</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Model:</strong> {{ ai_stats.model_name }}</p>
+                    <p><strong>QA Pairs:</strong> {{ ai_stats.total_qa_pairs }}</p>
+                    {% if ai_stats.categories %}
+                    <p><strong>Categories:</strong></p>
+                    <ul class="mb-0">
+                        {% for category in ai_stats.categories %}
+                        <li>{{ category }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    {% else %}
+                    <p class="text-muted">AI service not initialized</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Actions</h5>
+                </div>
+                <div class="card-body">
+                    <button id="retrainBtn" class="btn btn-success w-100 mb-2">
+                        <i class="material-icons align-middle">refresh</i> Retrain AI Model
+                    </button>
+                    <div id="retrainResult"></div>
+
+                    <div class="alert alert-info mt-3">
+                        <i class="material-icons align-middle">info</i>
+                        <strong>Note:</strong> Retraining may take a few minutes depending on the data size.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('retrainBtn').addEventListener('click', async function () {
+        const btn = this;
+        const resultDiv = document.getElementById('retrainResult');
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Training...';
+        resultDiv.innerHTML = '';
+
+        try {
+            const response = await fetch('/admin/ai-training/retrain', {
+                method: 'POST'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                resultDiv.innerHTML = `
+                <div class="alert alert-success mt-2">
+                    <i class="material-icons align-middle">check_circle</i>
+                    ${result.message}
+                </div>
+            `;
+
+                // Reload page after 2 seconds
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                resultDiv.innerHTML = `
+                <div class="alert alert-danger mt-2">
+                    <i class="material-icons align-middle">error</i>
+                    ${result.message}
+                </div>
+            `;
+            }
+        } catch (error) {
+            resultDiv.innerHTML = `
+            <div class="alert alert-danger mt-2">
+                <i class="material-icons align-middle">error</i>
+                Network error occurred
+            </div>
+        `;
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="material-icons align-middle">refresh</i> Retrain AI Model';
+        }
+    });
+</script>
+{% endblock %}

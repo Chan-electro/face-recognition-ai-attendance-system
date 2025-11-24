@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}AI Assistant{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="material-icons align-middle">smart_toy</i>
+                        AI Assistant
+                    </h4>
+                    <small>Ask me anything about your courses, faculty, timetable, or attendance!</small>
+                </div>
+                <div class="card-body" id="chatContainer"
+                    style="height: 500px; overflow-y: auto; background-color: #f8f9fa;">
+                    <div id="chatMessages">
+                        <div class="alert alert-info">
+                            <i class="material-icons align-middle">info</i>
+                            <strong>Welcome!</strong> I'm your AI assistant. Ask me questions like:
+                            <ul class="mb-0 mt-2">
+                                <li>"Who teaches Data Structures?"</li>
+                                <li>"What is the minimum attendance required?"</li>
+                                <li>"When is the Operating Systems class?"</li>
+                                <li>"How can I improve my attendance?"</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <form id="chatForm">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="questionInput"
+                                placeholder="Type your question here..." autocomplete="off" required>
+                            <button class="btn btn-primary" type="submit" id="sendButton">
+                                <i class="material-icons align-middle">send</i> Send
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/ai-chat.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}View Students{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">
+        <i class="material-icons align-middle">people</i>
+        Student List
+    </h2>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Semester</th>
+                            <th>Overall Attendance</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in student_data %}
+                        <tr>
+                            <td><strong>{{ item.student.student_id }}</strong></td>
+                            <td>{{ item.student.full_name }}</td>
+                            <td>{{ item.student.department }}</td>
+                            <td>{{ item.student.semester }}</td>
+                            <td>
+                                <div class="progress" style="height: 25px;">
+                                    <div class="progress-bar {% if item.stats['percentage'] >= 75 %}bg-success{% else %}bg-danger{% endif %}"
+                                        style="width: {{ item.stats['percentage'] }}%">
+                                        {{ item.stats['percentage'] }}%
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if item.stats['percentage'] >= 75 %}
+                                <span class="badge bg-success">Good</span>
+                                {% else %}
+                                <span class="badge bg-danger">Low</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

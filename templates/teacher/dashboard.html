@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Teacher Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">
+        <i class="material-icons align-middle">dashboard</i>
+        Teacher Dashboard - Welcome, {{ user.full_name }}
+    </h1>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Marked Today</h6>
+                    <h2 class="mb-0">{{ marked_today }}</h2>
+                    <small>Attendance records</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Total Students</h6>
+                    <h2 class="mb-0">{{ total_students }}</h2>
+                    <small>Active students</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Subjects</h6>
+                    <h2 class="mb-0">{{ subjects|length }}</h2>
+                    <small>Total subjects</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <a href="{{ url_for('teacher.mark_attendance_page') }}"
+                                class="btn btn-lg btn-outline-primary w-100">
+                                <i class="material-icons align-middle">camera_alt</i>
+                                <br>Mark Attendance
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{{ url_for('teacher.view_students') }}"
+                                class="btn btn-lg btn-outline-success w-100">
+                                <i class="material-icons align-middle">people</i>
+                                <br>View Students
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{{ url_for('teacher.manage_faces') }}" class="btn btn-lg btn-outline-info w-100">
+                                <i class="material-icons align-middle">face</i>
+                                <br>Manage Faces
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{{ url_for('teacher.class_attendance') }}"
+                                class="btn btn-lg btn-outline-secondary w-100">
+                                <i class="material-icons align-middle">list_alt</i>
+                                <br>Class Attendance
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Subjects</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for subject in subjects %}
+                        <div class="list-group-item">
+                            <strong>{{ subject.code }}</strong>
+                            <br><small class="text-muted">{{ subject.name }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

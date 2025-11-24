@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">
+        <i class="material-icons align-middle">admin_panel_settings</i>
+        Admin Dashboard - Welcome, {{ user.full_name }}
+    </h1>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Students</h6>
+                    <h2 class="mb-0">{{ total_students }}</h2>
+                    <small>Active students</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Teachers</h6>
+                    <h2 class="mb-0">{{ total_teachers }}</h2>
+                    <small>Active teachers</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Subjects</h6>
+                    <h2 class="mb-0">{{ total_subjects }}</h2>
+                    <small>Active subjects</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Faculty</h6>
+                    <h2 class="mb-0">{{ total_faculty }}</h2>
+                    <small>Total faculty members</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Management Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <a href="{{ url_for('admin.manage_users') }}" class="btn btn-lg btn-outline-primary w-100">
+                                <i class="material-icons align-middle">people</i>
+                                <br>Manage Users
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{{ url_for('admin.manage_subjects') }}"
+                                class="btn btn-lg btn-outline-success w-100">
+                                <i class="material-icons align-middle">book</i>
+                                <br>Manage Subjects
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{{ url_for('admin.manage_faculty') }}" class="btn btn-lg btn-outline-info w-100">
+                                <i class="material-icons align-middle">school</i>
+                                <br>Manage Faculty
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{{ url_for('admin.manage_timetable') }}"
+                                class="btn btn-lg btn-outline-warning w-100">
+                                <i class="material-icons align-middle">schedule</i>
+                                <br>Manage Timetable
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{{ url_for('admin.ai_training') }}" class="btn btn-lg btn-outline-danger w-100">
+                                <i class="material-icons align-middle">psychology</i>
+                                <br>AI Training
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">AI Assistant Status</h5>
+                </div>
+                <div class="card-body">
+                    {% if ai_stats and ai_stats.is_trained %}
+                    <div class="alert alert-success">
+                        <i class="material-icons align-middle">check_circle</i>
+                        <strong>AI Model Active</strong>
+                        <p class="mb-0 mt-2">
+                            QA Pairs: {{ ai_stats.total_qa_pairs }}<br>
+                            Model: {{ ai_stats.model_name }}
+                        </p>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="material-icons align-middle">warning</i>
+                        <strong>AI Not Trained</strong>
+                        <p class="mb-0 mt-2">
+                            Please train the AI model from the AI Training page.
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Mark Attendance{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">
+        <i class="material-icons align-middle">camera_alt</i>
+        Mark Attendance
+    </h2>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Face Recognition</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Subject Selection -->
+                    <div class="mb-3">
+                        <label for="subjectSelect" class="form-label">Select Subject</label>
+                        <select class="form-select" id="subjectSelect" required>
+                            <option value="" selected disabled>Choose a subject...</option>
+                            {% for subject in subjects %}
+                            <option value="{{ subject.id }}">{{ subject.code }} - {{ subject.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Camera Feed -->
+                    <div class="text-center mb-3">
+                        <video id="videoElement" width="640" height="480" autoplay
+                            style="border: 2px solid #ddd; border-radius: 8px; max-width: 100%; display: none;"></video>
+                        <canvas id="canvasElement" width="640" height="480"
+                            style="border: 2px solid #ddd; border-radius: 8px; max-width: 100%; display: none;"></canvas>
+
+                        <div id="placeholderImage" class="bg-light p-5 rounded">
+                            <i class="material-icons" style="font-size: 128px; color: #ccc;">videocam_off</i>
+                            <p class="text-muted">Camera not started</p>
+                        </div>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="d-grid gap-2">
+                        <button id="startCameraBtn" class="btn btn-success btn-lg">
+                            <i class="material-icons align-middle">videocam</i> Start Camera
+                        </button>
+                        <button id="captureBtn" class="btn btn-primary btn-lg" style="display: none;">
+                            <i class="material-icons align-middle">camera</i> Capture & Mark Attendance
+                        </button>
+                        <button id="stopCameraBtn" class="btn btn-danger" style="display: none;">
+                            <i class="material-icons align-middle">stop</i> Stop Camera
+                        </button>
+                    </div>
+
+                    <!-- Result -->
+                    <div id="resultArea" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Instructions</h5>
+                </div>
+                <div class="card-body">
+                    <ol>
+                        <li>Select the subject from the dropdown</li>
+                        <li>Click "Start Camera" to enable webcam</li>
+                        <li>Position the student's face in the frame</li>
+                        <li>Click "Capture & Mark Attendance"</li>
+                        <li>The system will automatically recognize the student</li>
+                    </ol>
+
+                    <div class="alert alert-warning mt-3">
+                        <i class="material-icons align-middle">info</i>
+                        <strong>Note:</strong> Ensure good lighting and clear face visibility for accurate recognition.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/camera.js') }}"></script>
+{% endblock %}

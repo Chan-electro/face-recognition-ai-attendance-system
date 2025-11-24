@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Student Faces - Teacher{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">
+        <i class="material-icons align-middle">face</i>
+        Manage Student Faces
+    </h2>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Student Face Encodings</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Face Status</th>
+                            <th>Encodings Count</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in student_faces %}
+                        <tr>
+                            <td><strong>{{ item.student.student_id }}</strong></td>
+                            <td>{{ item.student.full_name }}</td>
+                            <td>
+                                {% if item.has_encoding %}
+                                <span class="badge bg-success">
+                                    <i class="material-icons align-middle" style="font-size: 16px;">check_circle</i>
+                                    Registered
+                                </span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">
+                                    <i class="material-icons align-middle" style="font-size: 16px;">warning</i>
+                                    Not Registered
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.encoding_count }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary open-camera-btn"
+                                    data-student-id="{{ item.student.id }}"
+                                    data-student-name="{{ item.student.full_name }}">
+                                    <i class="material-icons align-middle">camera_alt</i>
+                                    {% if item.has_encoding %}Update{% else %}Add{% endif %} Face
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Camera Modal -->
+<div class="modal fade" id="cameraModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="material-icons align-middle text-primary me-2">camera_alt</i>
+                    Register Face - <span id="student-name-display"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="camera-view" class="mb-3 position-relative">
+                    <video id="video" width="100%" height="auto" autoplay playsinline class="rounded border bg-light"
+                        style="min-height: 240px;"></video>
+                    <canvas id="canvas" style="display: none;"></canvas>
+                    <div class="position-absolute top-0 end-0 m-2">
+                        <span class="badge bg-danger animate-pulse">LIVE</span>
+                    </div>
+                </div>
+
+                <div id="preview-view" class="mb-3" style="display: none;">
+                    <img id="photo-preview" src="" class="img-fluid rounded border" alt="Captured Face">
+                </div>
+
+                <div id="status-message" class="mb-3 text-muted">
+                    Position the student's face in the center
+                </div>
+
+                <div id="camera-controls">
+                    <button id="capture-btn" class="btn btn-primary me-2">
+                        <i class="material-icons align-middle">camera</i> Capture
+                    </button>
+                </div>
+
+                <div id="preview-controls" style="display: none;">
+                    <button id="retake-btn" class="btn btn-outline-secondary me-2">
+                        <i class="material-icons align-middle">refresh</i> Retake
+                    </button>
+                    <button id="save-btn" class="btn btn-success">
+                        <i class="material-icons align-middle">save</i> Save Face
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const cameraModal = document.getElementById('cameraModal');
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const photoPreview = document.getElementById('photo-preview');
+        const captureBtn = document.getElementById('capture-btn');
+        const retakeBtn = document.getElementById('retake-btn');
+        const saveBtn = document.getElementById('save-btn');
+        const cameraView = document.getElementById('camera-view');
+        const previewView = document.getElementById('preview-view');
+        const cameraControls = document.getElementById('camera-controls');
+        const previewControls = document.getElementById('preview-controls');
+        const statusMessage = document.getElementById('status-message');
+        const studentNameDisplay = document.getElementById('student-name-display');
+
+        let stream = null;
+        let currentStudentId = null;
+
+        // Open camera for student
+        document.querySelectorAll('.open-camera-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                currentStudentId = this.dataset.studentId;
+                studentNameDisplay.textContent = this.dataset.studentName;
+                const modal = new bootstrap.Modal(cameraModal);
+                modal.show();
+            });
+        });
+
+        // Start camera when modal opens
+        cameraModal.addEventListener('shown.bs.modal', async function () {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                statusMessage.innerHTML = 'Position the student\'s face in the center';
+                statusMessage.className = 'mb-3 text-muted';
+            } catch (err) {
+                console.error("Error accessing camera: ", err);
+                statusMessage.innerHTML = 'Error accessing camera. Please allow camera permissions.';
+                statusMessage.className = 'mb-3 text-danger';
+            }
+        });
+
+        // Stop camera when modal closes
+        cameraModal.addEventListener('hidden.bs.modal', function () {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            // Reset view
+            cameraView.style.display = 'block';
+            previewView.style.display = 'none';
+            cameraControls.style.display = 'block';
+            previewControls.style.display = 'none';
+        });
+
+        // Capture Photo
+        captureBtn.addEventListener('click', function () {
+            if (!stream) return;
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+
+            const dataUrl = canvas.toDataURL('image/jpeg');
+            photoPreview.src = dataUrl;
+
+            cameraView.style.display = 'none';
+            previewView.style.display = 'block';
+            cameraControls.style.display = 'none';
+            previewControls.style.display = 'block';
+            statusMessage.innerHTML = 'Review the photo. Make sure the face is clearly visible.';
+        });
+
+        // Retake Photo
+        retakeBtn.addEventListener('click', function () {
+            cameraView.style.display = 'block';
+            previewView.style.display = 'none';
+            cameraControls.style.display = 'block';
+            previewControls.style.display = 'none';
+            statusMessage.innerHTML = 'Position the student\'s face in the center';
+            statusMessage.className = 'mb-3 text-muted';
+        });
+
+        // Save Face
+        saveBtn.addEventListener('click', function () {
+            const dataUrl = photoPreview.src;
+
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+            statusMessage.innerHTML = '';
+
+            fetch("{{ url_for('teacher.add_face') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    student_id: currentStudentId,
+                    image: dataUrl
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        statusMessage.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        statusMessage.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+                        saveBtn.disabled = false;
+                        saveBtn.innerHTML = '<i class="material-icons align-middle">save</i> Save Face';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    statusMessage.innerHTML = '<div class="alert alert-danger">An error occurred. Please try again.</div>';
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="material-icons align-middle">save</i> Save Face';
+                });
+        });
+    });
+</script>
+
+<style>
+    .animate-pulse {
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.5;
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+</style>
+{% endblock %}
