@@ -17,7 +17,7 @@ from datetime import datetime
 # ─────────────────────────────────────────────
 # Configuration
 # ─────────────────────────────────────────────
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 OPENROUTER_MODEL   = "arcee-ai/trinity-large-preview:free"
 OPENROUTER_URL     = "https://openrouter.ai/api/v1/chat/completions"
 

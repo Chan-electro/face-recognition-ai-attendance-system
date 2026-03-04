@@ -1,5 +1,9 @@
 import os
 from datetime import timedelta
+from dotenv import load_dotenv
+
+# Load environment variables from .env if it exists
+load_dotenv()
 
 # Base directory
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
