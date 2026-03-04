@@ -3,22 +3,24 @@
 {% block title %}Attendance History{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h2 class="mb-4">
-        <i class="material-icons align-middle">history</i>
-        Attendance History
-    </h2>
+<div class="flex flex-col gap-6">
+    <div>
+        <h1 class="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <i data-lucide="history" class="h-8 w-8 text-primary"></i>
+            Attendance History
+        </h1>
+        <p class="text-muted-foreground mt-1">Review your detailed attendance logs and statistics.</p>
+    </div>
 
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Filter</h5>
-        </div>
-        <div class="card-body">
-            <form method="GET">
-                <div class="row">
-                    <div class="col-md-6">
-                        <label for="subject_id" class="form-label">Subject</label>
-                        <select class="form-select" name="subject_id" id="subject_id">
+    <!-- Filter Card -->
+    <div class="shadcn-card bg-muted/20 border-border/50">
+        <div class="shadcn-card-content p-4">
+            <form method="GET" class="flex flex-col sm:flex-row gap-4 items-end">
+                <div class="space-y-2 flex-1 w-full">
+                    <label for="subject_id" class="text-sm font-medium leading-none">Filter by Subject</label>
+                    <div class="relative w-full">
+                        <select id="subject_id" name="subject_id"
+                            class="flex h-10 w-full appearance-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background pr-8 focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
                             <option value="">All Subjects</option>
                             {% for subject in subjects %}
                             <option value="{{ subject.id }}" {% if selected_subject and selected_subject.id==subject.id
@@ -27,42 +29,59 @@
                             </option>
                             {% endfor %}
                         </select>
-                    </div>
-                    <div class="col-md-6 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="material-icons align-middle">filter_list</i> Filter
-                        </button>
+                        <i data-lucide="chevron-down"
+                            class="absolute right-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none"></i>
                     </div>
                 </div>
+                <button type="submit"
+                    class="shadcn-btn shadcn-btn-primary w-full sm:w-auto h-10 px-8 whitespace-nowrap">
+                    <i data-lucide="filter" class="mr-2 h-4 w-4"></i> Apply Filter
+                </button>
             </form>
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header bg-secondary text-white">
-            <h5 class="mb-0">Attendance Records</h5>
+    <!-- Records Card -->
+    <div class="shadcn-card overflow-hidden">
+        <div class="shadcn-card-header bg-muted/30 border-b border-border pb-4">
+            <h5 class="font-semibold flex items-center gap-2">
+                <i data-lucide="list-checks" class="h-5 w-5 text-primary"></i>
+                Attendance Records {% if selected_subject %}({{ selected_subject.name }}){% endif %}
+            </h5>
         </div>
-        <div class="card-body p-0">
+        <div class="p-0">
             {% if records %}
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left align-middle">
+                    <thead class="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
                         <tr>
-                            <th>Date</th>
-                            <th>Time</th>
-                            <th>Subject</th>
-                            <th>Status</th>
+                            <th class="px-6 py-4 font-medium">Date</th>
+                            <th class="px-6 py-4 font-medium">Time</th>
+                            <th class="px-6 py-4 font-medium">Subject</th>
+                            <th class="px-6 py-4 font-medium text-right">Status</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="divide-y divide-border">
                         {% for record in records %}
-                        <tr>
-                            <td>{{ record.date }}</td>
-                            <td>{{ record.time }}</td>
-                            <td>{{ record.subject_name }}</td>
-                            <td>
-                                <span
-                                    class="badge bg-{{ 'success' if record.status == 'PRESENT' else ('warning' if record.status == 'LATE' else 'danger') }}">
+                        <tr class="hover:bg-muted/30 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-foreground font-medium flex items-center gap-2">
+                                <i data-lucide="calendar" class="h-4 w-4 text-muted-foreground"></i>
+                                {{ record.date }}
+                            </td>
+                            <td class="px-6 py-4 text-muted-foreground">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="clock" class="h-4 w-4"></i>
+                                    {{ record.time }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="font-medium text-foreground">{{ record.subject_name }}</div>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider
+                                    {% if record.status == 'PRESENT' %} bg-green-100 text-green-700
+                                    {% elif record.status == 'LATE' %} bg-yellow-100 text-yellow-700
+                                    {% else %} bg-red-100 text-red-700 {% endif %}">
                                     {{ record.status }}
                                 </span>
                             </td>
@@ -72,9 +91,14 @@
                 </table>
             </div>
             {% else %}
-            <div class="empty-state">
-                <i class="material-icons">event_busy</i>
-                <p>No attendance records found</p>
+            <div class="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
+                <div
+                    class="h-16 w-16 rounded-full bg-muted/50 flex items-center justify-center mb-4 text-muted-foreground">
+                    <i data-lucide="calendar-off" class="h-8 w-8"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-foreground">No records found</h3>
+                <p class="text-sm mt-1 max-w-sm">There are no attendance records matching your current filter criteria.
+                </p>
             </div>
             {% endif %}
         </div>

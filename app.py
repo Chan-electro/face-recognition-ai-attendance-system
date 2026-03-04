@@ -43,12 +43,10 @@ def create_app(config_name='development'):
         init_database(app)
         seed_database(app)
     
-    # Initialize AI service
+    # Initialize AI service (RAG agent backed by OpenRouter)
     from services.ai_service import get_ai_service
     with app.app_context():
-        ai_service = get_ai_service(app.config)
-        if ai_service and not ai_service.is_trained:
-            print("\nℹ️  AI model will be trained on first use or when admin triggers training.")
+        get_ai_service(app.config)
     
     # Initialize face recognition service
     from services.face_recognition_service import get_face_service
@@ -59,7 +57,8 @@ def create_app(config_name='development'):
     print("\n" + "="*60)
     print("🎓 Face Recognition Attendance System Started!")
     print("="*60)
-    print(f"Access the application at: http://localhost:5000")
+    print(f"  AI Backend : OpenRouter RAG (acree-ai/trinity-large-preview:free)")
+    print(f"  URL        : http://localhost:5000")
     print("="*60 + "\n")
     
     return app

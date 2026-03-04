@@ -48,8 +48,10 @@ def ask_ai():
                 'error': 'AI service not available'
             }), 503
         
-        # Ask question
-        result = ai_service.ask(question)
+        # Ask question — pass student_id so RAG includes personal attendance context
+        from flask import session
+        student_id = session.get('user_id') if session.get('role') == 'STUDENT' else None
+        result = ai_service.ask(question, student_id=student_id)
         
         return jsonify({
             'success': True,

@@ -3,85 +3,284 @@
 {% block title %}Mark Attendance{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h2 class="mb-4">
-        <i class="material-icons align-middle">camera_alt</i>
-        Mark Attendance
-    </h2>
+<div class="flex flex-col gap-6">
+    <div>
+        <h1 class="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <i data-lucide="clipboard-check" class="h-8 w-8 text-primary"></i>
+            Mark Attendance
+        </h1>
+        <p class="text-muted-foreground mt-1">Select a subject and mark students' attendance manually.</p>
+    </div>
 
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Face Recognition</h5>
-                </div>
-                <div class="card-body">
-                    <!-- Subject Selection -->
-                    <div class="mb-3">
-                        <label for="subjectSelect" class="form-label">Select Subject</label>
-                        <select class="form-select" id="subjectSelect" required>
-                            <option value="" selected disabled>Choose a subject...</option>
+    <!-- Subject Selection -->
+    <div class="shadcn-card bg-muted/20 border-border/50">
+        <div class="shadcn-card-content p-4">
+            <form id="subjectFilterForm" class="flex flex-col sm:flex-row gap-4 items-end">
+                <div class="space-y-2 flex-1 w-full">
+                    <label for="subjectSelect" class="text-sm font-medium leading-none">Select Subject</label>
+                    <div class="relative w-full">
+                        <select id="subjectSelect"
+                            class="flex h-10 w-full appearance-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background pr-8 focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                            <option value="" selected disabled>Choose a subject to load students...</option>
                             {% for subject in subjects %}
                             <option value="{{ subject.id }}">{{ subject.code }} - {{ subject.name }}</option>
                             {% endfor %}
                         </select>
+                        <i data-lucide="chevron-down"
+                            class="absolute right-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none"></i>
                     </div>
-
-                    <!-- Camera Feed -->
-                    <div class="text-center mb-3">
-                        <video id="videoElement" width="640" height="480" autoplay
-                            style="border: 2px solid #ddd; border-radius: 8px; max-width: 100%; display: none;"></video>
-                        <canvas id="canvasElement" width="640" height="480"
-                            style="border: 2px solid #ddd; border-radius: 8px; max-width: 100%; display: none;"></canvas>
-
-                        <div id="placeholderImage" class="bg-light p-5 rounded">
-                            <i class="material-icons" style="font-size: 128px; color: #ccc;">videocam_off</i>
-                            <p class="text-muted">Camera not started</p>
-                        </div>
-                    </div>
-
-                    <!-- Controls -->
-                    <div class="d-grid gap-2">
-                        <button id="startCameraBtn" class="btn btn-success btn-lg">
-                            <i class="material-icons align-middle">videocam</i> Start Camera
-                        </button>
-                        <button id="captureBtn" class="btn btn-primary btn-lg" style="display: none;">
-                            <i class="material-icons align-middle">camera</i> Capture & Mark Attendance
-                        </button>
-                        <button id="stopCameraBtn" class="btn btn-danger" style="display: none;">
-                            <i class="material-icons align-middle">stop</i> Stop Camera
-                        </button>
-                    </div>
-
-                    <!-- Result -->
-                    <div id="resultArea" class="mt-3"></div>
                 </div>
+                <button type="button" id="loadStudentsBtn"
+                    class="shadcn-btn shadcn-btn-primary w-full sm:w-auto h-10 px-8 whitespace-nowrap">
+                    <i data-lucide="users" class="mr-2 h-4 w-4"></i> Load Students
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="attendanceContainer" class="hidden flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+        <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold flex items-center gap-2">
+                <i data-lucide="users-round" class="h-5 w-5 text-primary"></i> Enrolled Students
+            </h3>
+            <div class="flex gap-2">
+                <button type="button" onclick="markAll('PRESENT')"
+                    class="shadcn-btn shadcn-btn-outline h-8 text-xs border-green-500/30 text-green-600 hover:bg-green-500/10">Mark
+                    All Present</button>
+                <button type="button" onclick="markAll('ABSENT')"
+                    class="shadcn-btn shadcn-btn-outline h-8 text-xs border-red-500/30 text-red-600 hover:bg-red-500/10">Mark
+                    All Absent</button>
             </div>
         </div>
 
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">Instructions</h5>
-                </div>
-                <div class="card-body">
-                    <ol>
-                        <li>Select the subject from the dropdown</li>
-                        <li>Click "Start Camera" to enable webcam</li>
-                        <li>Position the student's face in the frame</li>
-                        <li>Click "Capture & Mark Attendance"</li>
-                        <li>The system will automatically recognize the student</li>
-                    </ol>
+        <!-- Student List Card -->
+        <div class="shadcn-card overflow-hidden">
+            <div class="p-0">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left align-middle" id="studentsTable">
+                        <thead class="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
+                            <tr>
+                                <th class="px-6 py-4 font-medium w-16">ID</th>
+                                <th class="px-6 py-4 font-medium">Student Name</th>
+                                <th class="px-6 py-4 font-medium text-right min-w-[300px]">Attendance Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-border" id="studentListBody">
+                            {% for student in students %}
+                            <tr class="hover:bg-muted/30 transition-colors student-row"
+                                data-student-id="{{ student.id }}">
+                                <td class="px-6 py-4 whitespace-nowrap text-foreground font-medium">
+                                    {{ student.student_id or student.id }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="font-medium text-foreground">{{ student.full_name }}</div>
+                                    <div class="text-xs text-muted-foreground">{{ student.email }}</div>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <div class="inline-flex rounded-md shadow-sm" role="group">
+                                        <input type="radio" class="peer/present hidden" name="status_{{ student.id }}"
+                                            id="present_{{ student.id }}" value="PRESENT" checked>
+                                        <label for="present_{{ student.id }}"
+                                            class="cursor-pointer px-4 py-2 text-xs font-medium border border-border rounded-l-lg hover:bg-muted peer-checked/present:bg-green-100 peer-checked/present:text-green-700 peer-checked/present:border-green-200 transition-colors">
+                                            Present
+                                        </label>
 
-                    <div class="alert alert-warning mt-3">
-                        <i class="material-icons align-middle">info</i>
-                        <strong>Note:</strong> Ensure good lighting and clear face visibility for accurate recognition.
-                    </div>
+                                        <input type="radio" class="peer/late hidden" name="status_{{ student.id }}"
+                                            id="late_{{ student.id }}" value="LATE">
+                                        <label for="late_{{ student.id }}"
+                                            class="cursor-pointer px-4 py-2 text-xs font-medium border-t border-b border-r border-border hover:bg-muted peer-checked/late:bg-yellow-100 peer-checked/late:text-yellow-700 peer-checked/late:border-yellow-200 transition-colors">
+                                            Late
+                                        </label>
+
+                                        <input type="radio" class="peer/absent hidden" name="status_{{ student.id }}"
+                                            id="absent_{{ student.id }}" value="ABSENT">
+                                        <label for="absent_{{ student.id }}"
+                                            class="cursor-pointer px-4 py-2 text-xs font-medium border-t border-b border-r border-border rounded-r-lg hover:bg-muted peer-checked/absent:bg-red-100 peer-checked/absent:text-red-700 peer-checked/absent:border-red-200 transition-colors">
+                                            Absent
+                                        </label>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="px-6 py-12 text-center text-muted-foreground">
+                                    <div class="flex flex-col items-center justify-center">
+                                        <div
+                                            class="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-3 text-muted-foreground">
+                                            <i data-lucide="users-x" class="h-6 w-6"></i>
+                                        </div>
+                                        <p class="font-medium">No students found in the database.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
+            </div>
+
+            <div class="shadcn-card-footer bg-muted/10 border-t border-border p-4 flex justify-between items-center"
+                id="tableFooter">
+                <span class="text-sm text-muted-foreground">Total Students: <span id="studentCount"
+                        class="font-bold text-foreground">{{ students|length }}</span></span>
+                <button type="button" id="submitAttendanceBtn" class="shadcn-btn shadcn-btn-primary">
+                    <i data-lucide="save" class="mr-2 h-4 w-4"></i> Save All Attendance
+                </button>
             </div>
         </div>
     </div>
 </div>
 
-<script src="{{ url_for('static', filename='js/camera.js') }}"></script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const loadBtn = document.getElementById('loadStudentsBtn');
+        if (loadBtn) {
+            loadBtn.addEventListener('click', showStudentsGrid);
+        }
+
+        const submitBtn = document.getElementById('submitAttendanceBtn');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', submitBulkAttendance);
+        }
+
+        // Hide container initially until subject is selected
+        document.getElementById('attendanceContainer').classList.remove('flex');
+        document.getElementById('attendanceContainer').classList.add('hidden');
+    });
+
+    function showStudentsGrid() {
+        const subjectSelect = document.getElementById('subjectSelect');
+        const subjectId = subjectSelect.value;
+        const loadBtn = document.getElementById('loadStudentsBtn');
+
+        if (!subjectId) {
+            showToast('destructive', 'Please select a subject first.', 'alert-circle');
+            return;
+        }
+
+        // Fake delay to simulate loading for better UX
+        const originalBtnHTML = loadBtn.innerHTML;
+        loadBtn.disabled = true;
+        loadBtn.innerHTML = '<i data-lucide="loader-2" class="mr-2 h-4 w-4 animate-spin"></i> Loading...';
+        if (window.lucide) window.lucide.createIcons();
+        document.getElementById('attendanceContainer').classList.add('hidden');
+        document.getElementById('attendanceContainer').classList.remove('flex');
+
+        setTimeout(() => {
+            document.getElementById('attendanceContainer').classList.remove('hidden');
+            document.getElementById('attendanceContainer').classList.add('flex');
+            loadBtn.innerHTML = '<i data-lucide="check" class="mr-2 h-4 w-4"></i> Ready';
+            setTimeout(() => {
+                loadBtn.disabled = false;
+                loadBtn.innerHTML = originalBtnHTML;
+                if (window.lucide) window.lucide.createIcons();
+            }, 1000);
+        }, 500);
+    }
+
+    function markAll(status) {
+        const rows = document.querySelectorAll('.student-row');
+        rows.forEach(row => {
+            const studentId = row.getAttribute('data-student-id');
+            const radio = document.querySelector(`input[name="status_${studentId}"][value="${status}"]`);
+            if (radio) radio.checked = true;
+        });
+        showToast('emerald-600', `All students marked as ${status}.`, 'check-circle-2', 'bg-emerald-100 border-emerald-200');
+    }
+
+    async function submitBulkAttendance() {
+        const subjectId = document.getElementById('subjectSelect').value;
+        if (!subjectId) {
+            showToast('amber-600', 'No subject selected.', 'alert-triangle');
+            return;
+        }
+
+        const submitBtn = document.getElementById('submitAttendanceBtn');
+        const originalBtnHTML = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i data-lucide="loader-2" class="mr-2 h-4 w-4 animate-spin"></i> Saving...';
+        if (window.lucide) window.lucide.createIcons();
+
+        const rows = document.querySelectorAll('.student-row');
+        const promises = [];
+        let successCount = 0;
+        let failCount = 0;
+
+        // Process all attendance markings concurrently
+        for (const row of rows) {
+            const studentId = row.getAttribute('data-student-id');
+            const selectedRadio = document.querySelector(`input[name="status_${studentId}"]:checked`);
+
+            if (selectedRadio) {
+                const status = selectedRadio.value;
+                const promise = fetch('/teacher/mark-attendance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        student_id: parseInt(studentId),
+                        subject_id: parseInt(subjectId),
+                        status: status
+                    })
+                }).then(r => r.json()).then(result => {
+                    if (result.success) successCount++;
+                    else failCount++;
+                }).catch(() => failCount++);
+                promises.push(promise);
+            }
+        }
+
+        await Promise.all(promises);
+
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnHTML;
+        if (window.lucide) window.lucide.createIcons();
+
+        if (failCount === 0 && successCount > 0) {
+            showToast('green-600', `Successfully saved attendance for ${successCount} students.`, 'check-circle', 'bg-green-100 border-green-200');
+            // Play success sound
+            try {
+                const ac = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ac.createOscillator();
+                const gain = ac.createGain();
+                osc.connect(gain); gain.connect(ac.destination);
+                osc.frequency.value = 800;
+                gain.gain.setValueAtTime(0.3, ac.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + 0.3);
+                osc.start(ac.currentTime); osc.stop(ac.currentTime + 0.3);
+            } catch (e) { }
+        } else if (successCount > 0) {
+            showToast('amber-600', `Saved ${successCount}, but failed to save ${failCount}.`, 'alert-triangle', 'bg-amber-100 border-amber-200');
+        } else {
+            showToast('destructive', 'Failed to save attendance. Please check network connection.', 'x-circle', 'bg-destructive/10 border-destructive/20');
+        }
+    }
+
+    // Modern Toast Notification injected into base.html logic
+    function showToast(textColor, messageHTML, iconName, bgClasses = 'bg-accent border-border') {
+        const toastContainer = document.getElementById('flash-container') || document.body;
+        const toast = document.createElement('div');
+        toast.className = `fixed top-20 right-4 z-50 flex items-center justify-between gap-3 p-4 rounded-lg border ${bgClasses} text-${textColor} shadow-lg animate-in fade-in slide-in-from-top-5 duration-300 transform min-w-[300px]`;
+        toast.innerHTML = `
+            <div class="flex items-center gap-3">
+                <i data-lucide="${iconName}" class="h-5 w-5 shrink-0"></i>
+                <div class="text-sm font-medium">${messageHTML}</div>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-current opacity-70 hover:opacity-100 transition-opacity ml-4">
+                <i data-lucide="x" class="h-4 w-4"></i>
+            </button>
+        `;
+        toastContainer.appendChild(toast);
+        if (window.lucide) window.lucide.createIcons();
+
+        // Auto remove
+        setTimeout(() => {
+            toast.classList.add('animate-out', 'fade-out', 'slide-out-to-top-5');
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
+    }
+</script>
 {% endblock %}

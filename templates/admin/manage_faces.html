@@ -3,53 +3,118 @@
 {% block title %}Manage Student Faces - Admin{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <h2 class="mb-4">
-        <i class="material-icons align-middle">face</i>
-        Manage Student Faces
-    </h2>
+<div class="flex flex-col gap-6">
+    <div>
+        <h1 class="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <i data-lucide="scan-face" class="h-8 w-8 text-primary"></i>
+            Manage Student Faces
+        </h1>
+        <p class="text-muted-foreground mt-1">Register and manage facial encodings for the Face Recognition Login
+            system.</p>
+    </div>
 
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Student Face Encodings</h5>
+    <!-- Stats Overview -->
+    <div class="grid gap-4 md:grid-cols-3">
+        <div class="shadcn-card">
+            <div class="p-6 flex flex-row items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-muted-foreground">Total Students</p>
+                    <h3 class="text-2xl font-bold mt-1">{{ student_faces|length }}</h3>
+                </div>
+                <div class="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                    <i data-lucide="users" class="h-5 w-5"></i>
+                </div>
+            </div>
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
+
+        {% set registered_count = student_faces|selectattr('has_encoding')|list|length %}
+        <div class="shadcn-card">
+            <div class="p-6 flex flex-row items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-muted-foreground">Registered Faces</p>
+                    <h3 class="text-2xl font-bold mt-1 text-green-600">{{ registered_count }}</h3>
+                </div>
+                <div class="h-10 w-10 bg-green-500/10 rounded-full flex items-center justify-center text-green-600">
+                    <i data-lucide="shield-check" class="h-5 w-5"></i>
+                </div>
+            </div>
+        </div>
+
+        {% set unregistered_count = student_faces|length - registered_count %}
+        <div class="shadcn-card">
+            <div class="p-6 flex flex-row items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-muted-foreground">Pending Registration</p>
+                    <h3 class="text-2xl font-bold mt-1 text-amber-600">{{ unregistered_count }}</h3>
+                </div>
+                <div class="h-10 w-10 bg-amber-500/10 rounded-full flex items-center justify-center text-amber-600">
+                    <i data-lucide="shield-alert" class="h-5 w-5"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Faces List -->
+    <div class="shadcn-card overflow-hidden">
+        <div class="p-4 border-b border-border flex justify-between items-center bg-muted/20">
+            <h5 class="font-semibold flex items-center gap-2">
+                <i data-lucide="table-2" class="h-4 w-4 text-muted-foreground"></i>
+                Registration Status
+            </h5>
+
+            <div class="relative w-64 hidden sm:block">
+                <i data-lucide="search" class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"></i>
+                <input type="text" id="searchInput" placeholder="Search students..."
+                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 pl-8">
+            </div>
+        </div>
+        <div class="p-0">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left align-middle" id="facesTable">
+                    <thead class="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
                         <tr>
-                            <th>Student ID</th>
-                            <th>Name</th>
-                            <th>Face Status</th>
-                            <th>Encodings Count</th>
-                            <th>Action</th>
+                            <th class="px-6 py-4 font-medium w-32">Student ID</th>
+                            <th class="px-6 py-4 font-medium">Student Info</th>
+                            <th class="px-6 py-4 font-medium">Registration Status</th>
+                            <th class="px-6 py-4 font-medium hidden sm:table-cell">Encodings</th>
+                            <th class="px-6 py-4 font-medium text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="divide-y divide-border">
                         {% for item in student_faces %}
-                        <tr>
-                            <td><strong>{{ item.student.student_id }}</strong></td>
-                            <td>{{ item.student.full_name }}</td>
-                            <td>
+                        <tr class="hover:bg-muted/30 transition-colors search-row">
+                            <td class="px-6 py-4 whitespace-nowrap text-foreground font-medium">
+                                {{ item.student.student_id or item.student.id }}
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="font-medium text-foreground search-name">{{ item.student.full_name }}</div>
+                                <div class="text-xs text-muted-foreground search-email">{{ item.student.email }}</div>
+                            </td>
+                            <td class="px-6 py-4">
                                 {% if item.has_encoding %}
-                                <span class="badge bg-success">
-                                    <i class="material-icons align-middle" style="font-size: 16px;">check_circle</i>
+                                <div
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/10 text-green-700 border border-green-500/20">
+                                    <i data-lucide="check-circle-2" class="h-3.5 w-3.5"></i>
                                     Registered
-                                </span>
+                                </div>
                                 {% else %}
-                                <span class="badge bg-warning text-dark">
-                                    <i class="material-icons align-middle" style="font-size: 16px;">warning</i>
+                                <div
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-700 border border-amber-500/20">
+                                    <i data-lucide="alert-circle" class="h-3.5 w-3.5"></i>
                                     Not Registered
-                                </span>
+                                </div>
                                 {% endif %}
                             </td>
-                            <td>{{ item.encoding_count }}</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary open-camera-btn"
+                            <td class="px-6 py-4 hidden sm:table-cell text-muted-foreground font-medium">
+                                {{ item.encoding_count }}
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <button
+                                    class="shadcn-btn {% if item.has_encoding %}shadcn-btn-outline{% else %}shadcn-btn-primary{% endif %} h-8 text-xs open-camera-btn"
                                     data-student-id="{{ item.student.id }}"
                                     data-student-name="{{ item.student.full_name }}">
-                                    <i class="material-icons align-middle">camera_alt</i>
-                                    {% if item.has_encoding %}Update{% else %}Add{% endif %} Face
+                                    <i data-lucide="camera" class="mr-1.5 h-3.5 w-3.5"></i>
+                                    {% if item.has_encoding %}Update{% else %}Register{% endif %} Face
                                 </button>
                             </td>
                         </tr>
@@ -61,147 +126,286 @@
     </div>
 </div>
 
-<!-- Camera Modal -->
-<div class="modal fade" id="cameraModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="material-icons align-middle text-primary me-2">camera_alt</i>
-                    Register Face - <span id="student-name-display"></span>
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center">
-                <div id="camera-view" class="mb-3 position-relative">
-                    <video id="video" width="100%" height="auto" autoplay playsinline class="rounded border bg-light"
-                        style="min-height: 240px;"></video>
-                    <canvas id="canvas" style="display: none;"></canvas>
-                    <div class="position-absolute top-0 end-0 m-2">
-                        <span class="badge bg-danger animate-pulse">LIVE</span>
+<!-- Custom Camera Registration Modal -->
+<div id="cameraModal" class="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm hidden" tabindex="-1"
+    aria-hidden="true">
+    <div
+        class="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg animate-in zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:zoom-out-95">
+
+        <!-- Header -->
+        <div class="flex flex-col space-y-1.5 text-center sm:text-left">
+            <h2 class="text-lg font-semibold leading-none tracking-tight flex items-center gap-2">
+                <i data-lucide="scan-face" class="h-5 w-5 text-primary"></i>
+                Register Face Profile
+            </h2>
+            <p class="text-sm text-muted-foreground flex items-center gap-1">
+                For student: <strong id="student-name-display" class="text-foreground"></strong>
+            </p>
+        </div>
+
+        <button type="button" id="closeModalBtn"
+            class="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+            <i data-lucide="x" class="h-4 w-4"></i>
+            <span class="sr-only">Close</span>
+        </button>
+
+        <!-- Body -->
+        <div class="py-4">
+
+            <!-- Camera View -->
+            <div id="camera-view"
+                class="relative overflow-hidden rounded-md border-2 border-dashed border-border bg-muted/30 aspect-video flex flex-col items-center justify-center shadow-inner">
+
+                <video id="video" class="absolute inset-0 w-full h-full object-cover z-10 hidden" autoplay
+                    playsinline></video>
+                <canvas id="canvas" class="hidden"></canvas>
+
+                <!-- Loading State / Placeholder -->
+                <div id="camera-loading" class="flex flex-col items-center justify-center text-muted-foreground z-0">
+                    <i data-lucide="loader-2" class="h-8 w-8 animate-spin mb-2"></i>
+                    <p class="text-sm font-medium">Starting camera...</p>
+                </div>
+
+                <!-- Scanner UI overlay (like attendance) -->
+                <div id="scanner-overlay"
+                    class="absolute inset-x-8 inset-y-6 border-2 border-primary/40 rounded-3xl z-20 pointer-events-none hidden">
+                    <div class="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-xl">
+                    </div>
+                    <div class="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-xl">
+                    </div>
+                    <div class="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-xl">
+                    </div>
+                    <div class="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-xl">
+                    </div>
+
+                    <div
+                        class="absolute top-4 right-4 flex items-center gap-1.5 rounded-full bg-black/50 px-2 py-1 text-xs font-semibold text-white backdrop-blur-md">
+                        <div class="h-2 w-2 rounded-full bg-red-500 animate-[pulse_1.5s_infinite]"></div>
+                        LIVE
                     </div>
                 </div>
 
-                <div id="preview-view" class="mb-3" style="display: none;">
-                    <img id="photo-preview" src="" class="img-fluid rounded border" alt="Captured Face">
-                </div>
+            </div>
 
-                <div id="status-message" class="mb-3 text-muted">
-                    Position the student's face in the center
-                </div>
-
-                <div id="camera-controls">
-                    <button id="capture-btn" class="btn btn-primary me-2">
-                        <i class="material-icons align-middle">camera</i> Capture
-                    </button>
-                </div>
-
-                <div id="preview-controls" style="display: none;">
-                    <button id="retake-btn" class="btn btn-outline-secondary me-2">
-                        <i class="material-icons align-middle">refresh</i> Retake
-                    </button>
-                    <button id="save-btn" class="btn btn-success">
-                        <i class="material-icons align-middle">save</i> Save Face
-                    </button>
+            <!-- Preview View -->
+            <div id="preview-view"
+                class="relative overflow-hidden rounded-md border-2 border-primary bg-muted/30 aspect-video flex flex-col items-center justify-center shadow-inner hidden">
+                <img id="photo-preview" src="" class="absolute inset-0 w-full h-full object-cover z-10"
+                    alt="Captured Face">
+                <div
+                    class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 z-20 text-white flex justify-between items-end">
+                    <div>
+                        <p class="text-sm font-bold">Registration Preview</p>
+                        <p class="text-xs opacity-80">Ensure face is clear and centered.</p>
+                    </div>
+                    <i data-lucide="check-circle-2" class="h-6 w-6 text-green-400"></i>
                 </div>
             </div>
+
+            <!-- Status Indicator -->
+            <div id="status-message"
+                class="mt-4 flex p-3 rounded-md bg-muted/50 text-sm text-muted-foreground items-center gap-2">
+                <i data-lucide="info" class="h-4 w-4 text-sky-500"></i>
+                <span>Position the student's face clearly within the frame.</span>
+            </div>
+
         </div>
+
+        <!-- Footer / Controls -->
+        <div class="flex flex-col sm:flex-row-reverse sm:justify-between gap-2">
+
+            <div id="camera-controls" class="w-full flex">
+                <button id="capture-btn" class="shadcn-btn shadcn-btn-primary w-full disabled:opacity-50" disabled>
+                    <i data-lucide="aperture" class="mr-2 h-4 w-4"></i> Capture Face
+                </button>
+            </div>
+
+            <div id="preview-controls" class="w-full flex flex-col sm:flex-row gap-2 hidden">
+                <button id="save-btn"
+                    class="shadcn-btn bg-green-600 text-white hover:bg-green-700 w-full sm:w-auto flex-1">
+                    <i data-lucide="save" class="mr-2 h-4 w-4"></i> Save Profile
+                </button>
+                <button id="retake-btn" class="shadcn-btn shadcn-btn-outline w-full sm:w-auto">
+                    <i data-lucide="refresh-ccw" class="mr-2 h-4 w-4"></i> Retake
+                </button>
+            </div>
+
+        </div>
+
     </div>
 </div>
 {% endblock %}
 
-{% block scripts %}
+{% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Elements
         const cameraModal = document.getElementById('cameraModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const photoPreview = document.getElementById('photo-preview');
+
         const captureBtn = document.getElementById('capture-btn');
         const retakeBtn = document.getElementById('retake-btn');
         const saveBtn = document.getElementById('save-btn');
+
         const cameraView = document.getElementById('camera-view');
         const previewView = document.getElementById('preview-view');
         const cameraControls = document.getElementById('camera-controls');
         const previewControls = document.getElementById('preview-controls');
+
         const statusMessage = document.getElementById('status-message');
         const studentNameDisplay = document.getElementById('student-name-display');
+        const cameraLoading = document.getElementById('camera-loading');
+        const scannerOverlay = document.getElementById('scanner-overlay');
+        const searchInput = document.getElementById('searchInput');
 
         let stream = null;
         let currentStudentId = null;
 
-        // Open camera for student
+        // Search functionality
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function () {
+                const term = this.value.toLowerCase();
+                const rows = document.querySelectorAll('.search-row');
+
+                rows.forEach(row => {
+                    const name = row.querySelector('.search-name').textContent.toLowerCase();
+                    const email = row.querySelector('.search-email').textContent.toLowerCase();
+
+                    if (name.includes(term) || email.includes(term)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // Open camera modal
         document.querySelectorAll('.open-camera-btn').forEach(btn => {
             btn.addEventListener('click', function () {
                 currentStudentId = this.dataset.studentId;
                 studentNameDisplay.textContent = this.dataset.studentName;
-                const modal = new bootstrap.Modal(cameraModal);
-                modal.show();
+                openModal();
             });
         });
 
-        // Start camera when modal opens
-        cameraModal.addEventListener('shown.bs.modal', async function () {
+        // Close modal
+        closeModalBtn.addEventListener('click', closeModal);
+
+        function openModal() {
+            cameraModal.classList.remove('hidden');
+            setTimeout(() => {
+                cameraModal.querySelector('.fixed.left-\\[50\\%\\]').classList.remove('data-[state=closed]:animate-out');
+            }, 10);
+
+            // Reset Views
+            cameraView.classList.remove('hidden');
+            previewView.classList.add('hidden');
+            cameraControls.classList.remove('hidden');
+            previewControls.classList.add('hidden');
+
+            startCamera();
+        }
+
+        function closeModal() {
+            cameraModal.classList.add('hidden');
+            stopCamera();
+        }
+
+        // Start Camera
+        async function startCamera() {
             try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                // UI Loading
+                cameraLoading.classList.remove('hidden');
+                video.classList.add('hidden');
+                scannerOverlay.classList.add('hidden');
+                captureBtn.disabled = true;
+
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" }
+                });
+
                 video.srcObject = stream;
-                statusMessage.innerHTML = 'Position the student\'s face in the center';
-                statusMessage.className = 'mb-3 text-muted';
+
+                video.onloadedmetadata = () => {
+                    cameraLoading.classList.add('hidden');
+                    video.classList.remove('hidden');
+                    scannerOverlay.classList.remove('hidden');
+                    captureBtn.disabled = false;
+                };
+
+                updateStatus('info', 'text-sky-500', 'Position the student\'s face clearly within the frame.');
+
             } catch (err) {
                 console.error("Error accessing camera: ", err);
-                statusMessage.innerHTML = 'Error accessing camera. Please allow camera permissions.';
-                statusMessage.className = 'mb-3 text-danger';
+                cameraLoading.classList.add('hidden');
+                updateStatus('alert-circle', 'text-destructive', 'Error accessing camera. Please allow permissions.');
+                captureBtn.disabled = true;
             }
-        });
+        }
 
-        // Stop camera when modal closes
-        cameraModal.addEventListener('hidden.bs.modal', function () {
+        // Stop Camera
+        function stopCamera() {
             if (stream) {
                 stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
                 stream = null;
             }
-            // Reset view
-            cameraView.style.display = 'block';
-            previewView.style.display = 'none';
-            cameraControls.style.display = 'block';
-            previewControls.style.display = 'none';
-        });
+        }
 
         // Capture Photo
         captureBtn.addEventListener('click', function () {
             if (!stream) return;
 
+            // Flash effect
+            const flash = document.createElement('div');
+            flash.className = 'absolute inset-0 bg-white z-50 animate-in fade-in fade-out duration-300 pointer-events-none';
+            cameraView.appendChild(flash);
+            setTimeout(() => flash.remove(), 300);
+
+            // Draw to canvas
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             canvas.getContext('2d').drawImage(video, 0, 0);
 
-            const dataUrl = canvas.toDataURL('image/jpeg');
+            // Create image data
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
             photoPreview.src = dataUrl;
 
-            cameraView.style.display = 'none';
-            previewView.style.display = 'block';
-            cameraControls.style.display = 'none';
-            previewControls.style.display = 'block';
-            statusMessage.innerHTML = 'Review the photo. Make sure the face is clearly visible.';
+            // Switch views
+            cameraView.classList.add('hidden');
+            previewView.classList.remove('hidden');
+            cameraControls.classList.add('hidden');
+            previewControls.classList.remove('hidden');
+
+            updateStatus('info', 'text-amber-500', 'Review the photo. Make sure the face is clearly visible without blur.');
         });
 
         // Retake Photo
         retakeBtn.addEventListener('click', function () {
-            cameraView.style.display = 'block';
-            previewView.style.display = 'none';
-            cameraControls.style.display = 'block';
-            previewControls.style.display = 'none';
-            statusMessage.innerHTML = 'Position the student\'s face in the center';
-            statusMessage.className = 'mb-3 text-muted';
+            cameraView.classList.remove('hidden');
+            previewView.classList.add('hidden');
+            cameraControls.classList.remove('hidden');
+            previewControls.classList.add('hidden');
+
+            updateStatus('info', 'text-sky-500', 'Position the student\'s face clearly within the frame.');
         });
 
         // Save Face
         saveBtn.addEventListener('click', function () {
             const dataUrl = photoPreview.src;
 
+            // Loading state
+            const originalBtnHtml = saveBtn.innerHTML;
             saveBtn.disabled = true;
-            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
-            statusMessage.innerHTML = '';
+            retakeBtn.disabled = true;
+            saveBtn.innerHTML = '<i data-lucide="loader-2" class="mr-2 h-4 w-4 animate-spin"></i> Processing...';
+            if (window.lucide) window.lucide.createIcons();
+
+            updateStatus('loader-2', 'text-primary animate-spin', 'Analyzing facial features, please wait...', 'bg-primary/10');
 
             fetch("{{ url_for('admin.add_face') }}", {
                 method: 'POST',
@@ -216,43 +420,50 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        statusMessage.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                        updateStatus('check-circle-2', 'text-green-600', data.message, 'bg-green-100 border border-green-200');
+
+                        // Success sound
+                        try {
+                            const ac = new (window.AudioContext || window.webkitAudioContext)();
+                            const osc = ac.createOscillator();
+                            const gain = ac.createGain();
+                            osc.connect(gain); gain.connect(ac.destination);
+                            osc.frequency.value = 800;
+                            gain.gain.setValueAtTime(0.3, ac.currentTime);
+                            gain.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + 0.3);
+                            osc.start(ac.currentTime); osc.stop(ac.currentTime + 0.3);
+                        } catch (e) { }
+
+                        saveBtn.innerHTML = '<i data-lucide="check" class="mr-2 h-4 w-4"></i> Saved!';
+                        if (window.lucide) window.lucide.createIcons();
+
                         setTimeout(() => {
                             location.reload();
-                        }, 1500);
+                        }, 1200);
                     } else {
-                        statusMessage.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+                        updateStatus('x-circle', 'text-destructive', data.message, 'bg-destructive/10 border border-destructive/20');
                         saveBtn.disabled = false;
-                        saveBtn.innerHTML = '<i class="material-icons align-middle">save</i> Save Face';
+                        retakeBtn.disabled = false;
+                        saveBtn.innerHTML = originalBtnHtml;
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    statusMessage.innerHTML = '<div class="alert alert-danger">An error occurred. Please try again.</div>';
+                    updateStatus('alert-triangle', 'text-destructive', 'A network error occurred. Please try again.', 'bg-destructive/10 border border-destructive/20');
                     saveBtn.disabled = false;
-                    saveBtn.innerHTML = '<i class="material-icons align-middle">save</i> Save Face';
+                    retakeBtn.disabled = false;
+                    saveBtn.innerHTML = originalBtnHtml;
                 });
         });
+
+        function updateStatus(iconFile, textColorClass, msg, bgClass = 'bg-muted/50') {
+            statusMessage.className = `mt-4 flex p-3 rounded-md text-sm items-center gap-2 ${bgClass} ${textColorClass}`;
+            statusMessage.innerHTML = `
+                <i data-lucide="${iconFile}" class="h-4 w-4 shrink-0"></i>
+                <span>${msg}</span>
+            `;
+            if (window.lucide) window.lucide.createIcons();
+        }
     });
 </script>
-
-<style>
-    .animate-pulse {
-        animation: pulse 1.5s infinite;
-    }
-
-    @keyframes pulse {
-        0% {
-            opacity: 1;
-        }
-
-        50% {
-            opacity: 0.5;
-        }
-
-        100% {
-            opacity: 1;
-        }
-    }
-</style>
 {% endblock %}

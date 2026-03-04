@@ -48,10 +48,12 @@ def mark_attendance_page():
     """Attendance marking page"""
     user = User.query.get(session.get('user_id'))
     subjects = Subject.query.filter_by(is_active=True).all()
+    students = User.query.filter_by(role='STUDENT', is_active=True).all()
     
     context = {
         'user': user,
-        'subjects': subjects
+        'subjects': subjects,
+        'students': students
     }
     
     return render_template('teacher/mark_attendance.html', **context)
@@ -60,51 +62,36 @@ def mark_attendance_page():
 @teacher_bp.route('/mark-attendance', methods=['POST'])
 @role_required('TEACHER')
 def mark_attendance():
-    """Process face recognition and mark attendance"""
+    """Manually mark attendance for a student"""
     try:
         data = request.get_json()
         
         if not data:
             return jsonify({'success': False, 'message': 'No data provided'}), 400
         
-        image_data = data.get('image')
+        student_id = data.get('student_id')
         subject_id = data.get('subject_id')
+        status = data.get('status', 'PRESENT')
         
-        if not image_data or not subject_id:
-            return jsonify({'success': False, 'message': 'Missing image or subject'}), 400
-        
-        # Get face recognition service
-        from flask import current_app
-        face_service = get_face_service(current_app.config)
-        
-        # Process image
-        image = face_service.process_base64_image(image_data)
-        
-        if image is None:
-            return jsonify({'success': False, 'message': 'Invalid image data'}), 400
-        
-        # Recognize face
-        result = face_service. recognize_from_image(image)
-        
-        if not result['success']:
-            return jsonify(result), 200
+        if not student_id or not subject_id:
+            return jsonify({'success': False, 'message': 'Missing student or subject'}), 400
         
         # Mark attendance
         attendance = AttendanceService.mark_attendance(
-            student_id=result['user_id'],
+            student_id=student_id,
             subject_id=subject_id,
-            status='PRESENT',
+            status=status,
             marked_by=session.get('user_id'),
-            confidence_score=result['confidence'],
-            is_manual=False
+            confidence_score=1.0, # Manual attendance
+            is_manual=True
         )
         
         if attendance:
+            student = User.query.get(student_id)
             return jsonify({
                 'success': True,
-                'message': f"Attendance marked for {result['user']['full_name']}",
-                'student': result['user'],
-                'confidence': result['confidence']
+                'message': f"Attendance marked {status} for {student.full_name}",
+                'student_name': student.full_name
             })
         else:
             return jsonify({'success': False, 'message': 'Failed to mark attendance'}), 500
@@ -113,41 +100,6 @@ def mark_attendance():
         print(f"Error in mark_attendance: {e}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
-
-@teacher_bp.route('/manual-attendance', methods=['POST'])
-@role_required('TEACHER')
-def manual_attendance():
-    """Manually mark attendance"""
-    try:
-        data = request.get_json()
-        
-        student_id = data.get('student_id')
-        subject_id = data.get('subject_id')
-        status = data.get('status', 'PRESENT')
-        
-        if not student_id or not subject_id:
-            return jsonify({'success': False, 'message': 'Missing required fields'}), 400
-        
-        attendance = AttendanceService.mark_attendance(
-            student_id=student_id,
-            subject_id=subject_id,
-            status=status,
-            marked_by=session.get('user_id'),
-            is_manual=True
-        )
-        
-        if attendance:
-            student = User.query.get(student_id)
-            return jsonify({
-                'success': True,
-                'message': f"Attendance marked for {student.full_name}",
-                'student_name': student.full_name
-            })
-        else:
-            return jsonify({'success': False, 'message': 'Failed to mark attendance'}), 500
-            
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
 
 
 @teacher_bp.route('/students')
@@ -208,70 +160,6 @@ def class_attendance():
     }
     
     return render_template('teacher/class_attendance.html', **context)
-
-
-@teacher_bp.route('/manage-faces')
-@role_required('TEACHER')
-def manage_faces():
-    """Manage student facial data"""
-    user = User.query.get(session.get('user_id'))
-    students = User.query.filter_by(role='STUDENT', is_active=True).all()
-    
-    # Check which students have face encodings
-    student_faces = []
-    for student in students:
-        has_encoding = len(student.face_encodings.all()) > 0
-        student_faces.append({
-            'student': student,
-            'has_encoding': has_encoding,
-            'encoding_count': len(student.face_encodings.all())
-        })
-    
-    context = {
-        'user': user,
-        'student_faces': student_faces
-    }
-    
-    return render_template('teacher/manage_faces.html', **context)
-
-
-@teacher_bp.route('/add-face', methods=['POST'])
-@role_required('TEACHER')
-def add_face():
-    """Add face encoding for a student"""
-    try:
-        data = request.get_json()
-        
-        student_id = data.get('student_id')
-        image_data = data.get('image')
-        
-        if not student_id or not image_data:
-            return jsonify({'success': False, 'message': 'Missing required fields'}), 400
-        
-        # Get face recognition service
-        from flask import current_app
-        face_service = get_face_service(current_app.config)
-        
-        # Process image
-        image = face_service.process_base64_image(image_data)
-        
-        if image is None:
-            return jsonify({'success': False, 'message': 'Invalid image data'}), 400
-        
-        # Save face encoding
-        face_enc = face_service.save_face_encoding(student_id, image, is_primary=True)
-        
-        if face_enc:
-            student = User.query.get(student_id)
-            return jsonify({
-                'success': True,
-                'message': f"Face encoding added for {student.full_name}"
-            })
-        else:
-            return jsonify({'success': False, 'message': 'Failed to save face encoding'}), 500
-            
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
 
 
 @teacher_bp.route('/download-report')

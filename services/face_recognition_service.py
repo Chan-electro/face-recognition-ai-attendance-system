@@ -25,6 +25,17 @@ class FaceRecognitionService:
         self.known_encodings = {}  # Cache of user_id -> encoding
         self.load_known_encodings()
     
+    @staticmethod
+    def _ensure_rgb(image):
+        """Convert image to RGB format if needed (from BGR or other formats)"""
+        if isinstance(image, np.ndarray) and len(image.shape) == 3:
+            if image.shape[2] == 4:  # RGBA
+                image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
+            elif image.shape[2] == 3:
+                # Assume BGR from OpenCV and convert once
+                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        return image
+    
     def load_known_encodings(self):
         """Load all known face encodings from database into cache"""
         try:
@@ -44,17 +55,12 @@ class FaceRecognitionService:
         Detect faces in an image
         
         Args:
-            image: numpy array (BGR format from OpenCV) or PIL Image
+            image: numpy array (RGB format expected)
             
         Returns:
             List of face locations [(top, right, bottom, left), ...]
         """
         try:
-            # Convert BGR to RGB if needed (OpenCV uses BGR)
-            if isinstance(image, np.ndarray) and len(image.shape) == 3:
-                if image.shape[2] == 3:
-                    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            
             # Detect face locations
             face_locations = face_recognition.face_locations(
                 image,
@@ -71,18 +77,13 @@ class FaceRecognitionService:
         Generate 128-D face encoding from image
         
         Args:
-            image: numpy array (RGB) or PIL Image
+            image: numpy array (RGB format expected)
             face_location: Optional specific face location (top, right, bottom, left)
             
         Returns:
             numpy array of 128 dimensions or None if no face found
         """
         try:
-            # Convert BGR to RGB if needed
-            if isinstance(image, np.ndarray) and len(image.shape) == 3:
-                if image.shape[2] == 3:
-                    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            
             # Get face encodings
             if face_location:
                 encodings = face_recognition.face_encodings(image, [face_location])
@@ -159,6 +160,9 @@ class FaceRecognitionService:
             FaceEncoding object or None if failed
         """
         try:
+            # Ensure image is in RGB format
+            image = self._ensure_rgb(image)
+            
             # Detect faces
             face_locations = self.detect_faces(image)
             
@@ -215,6 +219,9 @@ class FaceRecognitionService:
             dict with recognition results
         """
         try:
+            # Ensure image is in RGB format
+            image = self._ensure_rgb(image)
+            
             # Detect faces
             face_locations = self.detect_faces(image)
             

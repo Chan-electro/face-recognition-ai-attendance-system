@@ -3,46 +3,87 @@
 {% block title %}Timetable{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h2 class="mb-4">
-        <i class="material-icons align-middle">schedule</i>
-        Class Timetable - Semester {{ user.semester }}
-    </h2>
+<div class="flex flex-col gap-6">
+    <div>
+        <h1 class="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <i data-lucide="calendar-clock" class="h-8 w-8 text-primary"></i>
+            Class Timetable
+        </h1>
+        <p class="text-muted-foreground mt-1">
+            Weekly schedule for Semester <span class="font-bold text-foreground">{{ user.semester }}</span>.
+        </p>
+    </div>
 
-    <div class="card">
-        <div class="card-body">
-            {% for day in days %}
-            <h5 class="mt-4 mb-3">{{ day.capitalize() }}</h5>
-            {% if schedule[day] %}
-            <div class="table-responsive">
-                <table class="table table-bordered">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Time</th>
-                            <th>Subject Code</th>
-                            <th>Subject Name</th>
-                            <th>Faculty</th>
-                            <th>Room</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for entry in schedule[day] %}
-                        <tr>
-                            <td>{{ entry.start_time }} - {{ entry.end_time }}</td>
-                            <td><strong>{{ entry.subject_code }}</strong></td>
-                            <td>{{ entry.subject_name }}</td>
-                            <td>{{ entry.faculty_name }}</td>
-                            <td>{{ entry.room }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    <!-- Timetable Grid -->
+    <div class="grid gap-6">
+        {% for day in days %}
+        <div class="shadcn-card overflow-hidden">
+            <div class="shadcn-card-header bg-muted/30 border-b border-border py-4">
+                <h5 class="text-lg font-bold flex items-center gap-2 tracking-tight text-primary">
+                    <i data-lucide="calendar-days" class="h-5 w-5"></i>
+                    {{ day.capitalize() }}
+                </h5>
             </div>
-            {% else %}
-            <p class="text-muted">No classes scheduled</p>
-            {% endif %}
-            {% endfor %}
+
+            <div class="p-0">
+                {% if schedule[day] %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left align-middle">
+                        <thead class="text-xs text-muted-foreground uppercase bg-muted/10 border-b border-border">
+                            <tr>
+                                <th class="px-6 py-4 font-medium w-48">Time</th>
+                                <th class="px-6 py-4 font-medium">Subject</th>
+                                <th class="px-6 py-4 font-medium">Faculty</th>
+                                <th class="px-6 py-4 font-medium text-right">Room</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-border">
+                            {% for entry in schedule[day] %}
+                            <tr class="hover:bg-muted/30 transition-colors group">
+                                <td class="px-6 py-4 whitespace-nowrap text-foreground font-medium">
+                                    <div
+                                        class="flex items-center gap-2 bg-muted/50 w-fit px-3 py-1.5 rounded-md border border-border group-hover:bg-background transition-colors">
+                                        <i data-lucide="clock" class="h-4 w-4 text-muted-foreground"></i>
+                                        <span>{{ entry.start_time }} - {{ entry.end_time }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col">
+                                        <strong class="text-foreground tracking-tight">{{ entry.subject_code }}</strong>
+                                        <span class="text-muted-foreground mt-0.5">{{ entry.subject_name }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-2 text-muted-foreground">
+                                        <i data-lucide="user" class="h-4 w-4"></i>
+                                        {{ entry.faculty_name }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <span
+                                        class="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                                        <i data-lucide="map-pin" class="h-3 w-3"></i>
+                                        {{ entry.room }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
+                    <div
+                        class="h-16 w-16 rounded-full bg-muted/50 flex items-center justify-center mb-4 text-muted-foreground">
+                        <i data-lucide="coffee" class="h-8 w-8"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-foreground">No Classes</h3>
+                    <p class="text-sm mt-1">Enjoy your free day with no scheduled lectures.</p>
+                </div>
+                {% endif %}
+            </div>
         </div>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}

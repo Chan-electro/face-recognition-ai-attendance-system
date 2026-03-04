@@ -3,47 +3,184 @@
 {% block title %}AI Assistant{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">
-                        <i class="material-icons align-middle">smart_toy</i>
-                        AI Assistant
-                    </h4>
-                    <small>Ask me anything about your courses, faculty, timetable, or attendance!</small>
-                </div>
-                <div class="card-body" id="chatContainer"
-                    style="height: 500px; overflow-y: auto; background-color: #f8f9fa;">
-                    <div id="chatMessages">
-                        <div class="alert alert-info">
-                            <i class="material-icons align-middle">info</i>
-                            <strong>Welcome!</strong> I'm your AI assistant. Ask me questions like:
-                            <ul class="mb-0 mt-2">
-                                <li>"Who teaches Data Structures?"</li>
-                                <li>"What is the minimum attendance required?"</li>
-                                <li>"When is the Operating Systems class?"</li>
-                                <li>"How can I improve my attendance?"</li>
+<div class="flex flex-col h-[calc(100vh-10rem)] max-w-4xl mx-auto w-full">
+    <!-- Header -->
+    <div class="mb-4">
+        <h1 class="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <i data-lucide="bot" class="h-8 w-8 text-primary"></i>
+            AI Assistant
+        </h1>
+        <p class="text-muted-foreground mt-1 text-sm">Ask me anything about your courses, faculty, timetable, or
+            attendance!</p>
+    </div>
+
+    <!-- Chat Interface -->
+    <div class="shadcn-card flex flex-col flex-1 overflow-hidden h-full shadow-md">
+        <!-- Messages Area -->
+        <div id="chatContainer" class="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/20">
+            <div id="chatMessages" class="space-y-6">
+                <!-- Welcome Message -->
+                <div class="flex items-start gap-4">
+                    <div
+                        class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-1 border border-primary/20">
+                        <i data-lucide="bot" class="h-5 w-5 text-primary"></i>
+                    </div>
+                    <div class="flex flex-col gap-1 w-full max-w-[85%] sm:max-w-[75%]">
+                        <span class="text-sm font-semibold text-foreground">Assistant</span>
+                        <div
+                            class="rounded-2xl rounded-tl-sm bg-card border border-border px-5 py-4 text-sm text-card-foreground shadow-sm">
+                            <p class="font-semibold mb-3 text-base">Welcome! I'm your AI assistant. Ask me questions
+                                like:</p>
+                            <ul class="list-disc pl-5 space-y-2 text-muted-foreground">
+                                <li class="hover:text-foreground transition-colors">"Who teaches Data Structures?"</li>
+                                <li class="hover:text-foreground transition-colors">"What is the minimum attendance
+                                    required?"</li>
+                                <li class="hover:text-foreground transition-colors">"When is the Operating Systems
+                                    class?"</li>
+                                <li class="hover:text-foreground transition-colors">"How can I improve my attendance?"
+                                </li>
                             </ul>
                         </div>
                     </div>
                 </div>
-                <div class="card-footer">
-                    <form id="chatForm">
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="questionInput"
-                                placeholder="Type your question here..." autocomplete="off" required>
-                            <button class="btn btn-primary" type="submit" id="sendButton">
-                                <i class="material-icons align-middle">send</i> Send
-                            </button>
-                        </div>
-                    </form>
-                </div>
             </div>
+            <!-- Empty element for scrolling -->
+            <div id="chatAnchor" class="h-4"></div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="p-4 bg-card border-t border-border">
+            <form id="chatForm" class="flex items-end gap-3 max-w-4xl mx-auto">
+                <div class="relative flex-1">
+                    <input type="text" id="questionInput"
+                        class="flex w-full rounded-xl border border-input bg-background px-4 py-3.5 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
+                        placeholder="Type your question here parameter..." autocomplete="off" required>
+                </div>
+                <button type="submit" id="sendButton"
+                    class="shadcn-btn shadcn-btn-primary h-[50px] px-6 rounded-xl shrink-0 shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]">
+                    <i data-lucide="send" class="h-4 w-4 mr-2"></i> Send
+                </button>
+            </form>
+            <div class="text-center mt-3 text-[11px] text-muted-foreground">AI can make mistakes. Consider verifying
+                important information with your teachers.</div>
         </div>
     </div>
 </div>
+{% endblock %}
 
-<script src="{{ url_for('static', filename='js/ai-chat.js') }}"></script>
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const chatForm = document.getElementById('chatForm');
+        const questionInput = document.getElementById('questionInput');
+        const chatMessages = document.getElementById('chatMessages');
+        const sendButton = document.getElementById('sendButton');
+        const chatContainer = document.getElementById('chatContainer');
+        const chatAnchor = document.getElementById('chatAnchor');
+
+        if (!chatForm) return;
+
+        function scrollToBottom() {
+            chatAnchor.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function addMessage(type, message, confidence = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'w-full animate-in';
+            messageDiv.style.setProperty('--tw-enter-translate-y', '15px');
+
+            if (type === 'user') {
+                messageDiv.innerHTML = `
+                <div class="flex items-start gap-4 justify-end">
+                    <div class="flex flex-col gap-1 w-full max-w-[85%] sm:max-w-[75%] items-end">
+                        <span class="text-sm font-semibold text-foreground mr-1">You</span>
+                        <div class="rounded-2xl rounded-tr-sm bg-primary text-primary-foreground px-5 py-3.5 text-sm shadow-sm text-right">
+                            <p class="whitespace-pre-wrap leading-relaxed">${escapeHtml(message)}</p>
+                        </div>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 mt-1 border border-border">
+                        <i data-lucide="user" class="h-4 w-4 text-secondary-foreground"></i>
+                    </div>
+                </div>
+            `;
+            } else if (type === 'ai') {
+                const confidenceBadge = confidence ?
+                    `<span class="ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide ${confidence >= 0.7 ? 'bg-green-100 text-green-700' : (confidence >= 0.5 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700')}">
+                    <i data-lucide="target" class="h-3 w-3 mr-1"></i> ${(confidence * 100).toFixed(0)}%
+                </span>` : '';
+
+                messageDiv.innerHTML = `
+                <div class="flex items-start gap-4">
+                    <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-1 border border-primary/20">
+                        <i data-lucide="bot" class="h-5 w-5 text-primary"></i>
+                    </div>
+                    <div class="flex flex-col gap-1 w-full max-w-[85%] sm:max-w-[75%]">
+                        <span class="text-sm font-semibold text-foreground flex items-center">Assistant ${confidenceBadge}</span>
+                        <div class="rounded-2xl rounded-tl-sm bg-card border border-border px-5 py-4 text-sm text-card-foreground shadow-sm">
+                            <p class="whitespace-pre-wrap leading-relaxed text-base">${escapeHtml(message)}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            } else if (type === 'error') {
+                messageDiv.innerHTML = `
+                <div class="flex items-center justify-center my-4">
+                    <div class="rounded-full bg-destructive/10 px-5 py-2.5 text-sm font-medium text-destructive border border-destructive/20 flex items-center gap-2 shadow-sm">
+                        <i data-lucide="alert-circle" class="h-4 w-4"></i>
+                        ${escapeHtml(message)}
+                    </div>
+                </div>
+            `;
+            }
+
+            chatMessages.appendChild(messageDiv);
+            if (window.lucide) window.lucide.createIcons();
+            scrollToBottom();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        chatForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const question = questionInput.value.trim();
+            if (!question) return;
+
+            addMessage('user', question);
+            questionInput.value = '';
+
+            const originalBtnHTML = sendButton.innerHTML;
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 mr-2 animate-spin inline-block"></i> Thinking...';
+            if (window.lucide) window.lucide.createIcons();
+            scrollToBottom();
+
+            try {
+                const response = await fetch('/api/ask_ai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    addMessage('ai', result.answer, result.confidence);
+                } else {
+                    addMessage('error', result.error || 'Failed to get response');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('error', 'Network error occurred. Please try again.');
+            } finally {
+                sendButton.disabled = false;
+                sendButton.innerHTML = originalBtnHTML;
+                if (window.lucide) window.lucide.createIcons();
+                questionInput.focus();
+            }
+        });
+    });
+</script>
 {% endblock %}

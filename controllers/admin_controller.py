@@ -78,7 +78,7 @@ def add_user():
         role = data.get('role')
         student_id = data.get('student_id')
         department = data.get('department')
-        semester = data.get('semester', type=int)
+        semester = int(data.get('semester')) if data.get('semester') else None
         
         # Validate
         if not all([username, password, email, full_name, role]):
@@ -181,12 +181,12 @@ def add_timetable_entry():
     try:
         data = request.form
         
-        subject_id = data.get('subject_id', type=int)
+        subject_id = int(data.get('subject_id')) if data.get('subject_id') else None
         day_of_week = data.get('day_of_week')
         start_time_str = data.get('start_time')
         end_time_str = data.get('end_time')
         room = data.get('room')
-        semester = data.get('semester', type=int)
+        semester = int(data.get('semester')) if data.get('semester') else None
         department = data.get('department')
         
         # Validate
@@ -375,11 +375,11 @@ def manage_faces():
     # Check which students have face encodings
     student_faces = []
     for student in students:
-        has_encoding = len(student.face_encodings.all()) > 0
+        encodings = student.face_encodings.all()
         student_faces.append({
             'student': student,
-            'has_encoding': has_encoding,
-            'encoding_count': len(student.face_encodings.all())
+            'has_encoding': len(encodings) > 0,
+            'encoding_count': len(encodings)
         })
     
     context = {

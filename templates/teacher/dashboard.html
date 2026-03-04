@@ -3,101 +3,156 @@
 {% block title %}Teacher Dashboard{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <h1 class="mb-4">
-        <i class="material-icons align-middle">dashboard</i>
-        Teacher Dashboard - Welcome, {{ user.full_name }}
-    </h1>
+<div class="flex flex-col gap-6">
+    <div>
+        <h1 class="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <i data-lucide="layout-dashboard" class="h-8 w-8 text-primary"></i>
+            Teacher Dashboard
+        </h1>
+        <p class="text-muted-foreground mt-1">Welcome back, {{ user.full_name }}. Here is your daily overview.</p>
+    </div>
 
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h6 class="card-title">Marked Today</h6>
-                    <h2 class="mb-0">{{ marked_today }}</h2>
-                    <small>Attendance records</small>
-                </div>
+    <!-- Stats Cards -->
+    <div class="grid gap-4 md:grid-cols-3">
+        <!-- Marked Today -->
+        <div class="shadcn-card">
+            <div class="shadcn-card-header flex flex-row items-center justify-between space-y-0 pb-2">
+                <h3 class="tracking-tight text-sm font-medium">Marked Today</h3>
+                <i data-lucide="calendar-check" class="h-4 w-4 text-muted-foreground mr-1"></i>
+            </div>
+            <div class="shadcn-card-content">
+                <div class="text-2xl font-bold text-primary">{{ marked_today }}</div>
+                <p class="text-xs text-muted-foreground mt-1">Attendance records added today</p>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h6 class="card-title">Total Students</h6>
-                    <h2 class="mb-0">{{ total_students }}</h2>
-                    <small>Active students</small>
-                </div>
+        <!-- Total Students -->
+        <div class="shadcn-card">
+            <div class="shadcn-card-header flex flex-row items-center justify-between space-y-0 pb-2">
+                <h3 class="tracking-tight text-sm font-medium">Total Students</h3>
+                <i data-lucide="users" class="h-4 w-4 text-muted-foreground mr-1"></i>
+            </div>
+            <div class="shadcn-card-content">
+                <div class="text-2xl font-bold">{{ total_students }}</div>
+                <p class="text-xs text-muted-foreground mt-1">Active students enrolled</p>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h6 class="card-title">Subjects</h6>
-                    <h2 class="mb-0">{{ subjects|length }}</h2>
-                    <small>Total subjects</small>
-                </div>
+        <!-- Subjects -->
+        <div class="shadcn-card">
+            <div class="shadcn-card-header flex flex-row items-center justify-between space-y-0 pb-2">
+                <h3 class="tracking-tight text-sm font-medium">Subjects Taught</h3>
+                <i data-lucide="book-open" class="h-4 w-4 text-muted-foreground mr-1"></i>
+            </div>
+            <div class="shadcn-card-content">
+                <div class="text-2xl font-bold">{{ subjects|length }}</div>
+                <p class="text-xs text-muted-foreground mt-1">Total subjects assigned</p>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Quick Actions</h5>
+    <!-- Main Content Grid -->
+    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+
+        <!-- Left Column: Quick Actions (Span 4) -->
+        <div class="flex flex-col gap-6 lg:col-span-4 lg:col-start-1">
+            <div class="shadcn-card h-full">
+                <div class="shadcn-card-header border-b border-border pb-4">
+                    <h3 class="shadcn-card-title flex items-center gap-2">
+                        <i data-lucide="zap" class="h-5 w-5 text-primary"></i>
+                        Quick Actions
+                    </h3>
+                    <p class="text-sm text-muted-foreground mt-1">Common tasks and management tools</p>
                 </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <a href="{{ url_for('teacher.mark_attendance_page') }}"
-                                class="btn btn-lg btn-outline-primary w-100">
-                                <i class="material-icons align-middle">camera_alt</i>
-                                <br>Mark Attendance
-                            </a>
-                        </div>
-                        <div class="col-md-6">
-                            <a href="{{ url_for('teacher.view_students') }}"
-                                class="btn btn-lg btn-outline-success w-100">
-                                <i class="material-icons align-middle">people</i>
-                                <br>View Students
-                            </a>
-                        </div>
-                        <div class="col-md-6">
-                            <a href="{{ url_for('teacher.manage_faces') }}" class="btn btn-lg btn-outline-info w-100">
-                                <i class="material-icons align-middle">face</i>
-                                <br>Manage Faces
-                            </a>
-                        </div>
-                        <div class="col-md-6">
-                            <a href="{{ url_for('teacher.class_attendance') }}"
-                                class="btn btn-lg btn-outline-secondary w-100">
-                                <i class="material-icons align-middle">list_alt</i>
-                                <br>Class Attendance
-                            </a>
-                        </div>
+                <div class="shadcn-card-content pt-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <a href="{{ url_for('teacher.mark_attendance_page') }}"
+                            class="group relative overflow-hidden rounded-xl border border-primary/20 bg-primary/5 p-6 hover:bg-primary/10 transition-colors flex flex-col items-center justify-center text-center gap-3">
+                            <div
+                                class="rounded-full bg-primary/20 p-3 text-primary group-hover:scale-110 transition-transform">
+                                <i data-lucide="camera" class="h-6 w-6"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-foreground">Mark Attendance</h4>
+                                <p class="text-xs text-muted-foreground mt-1">Start face recognition</p>
+                            </div>
+                        </a>
+
+                        <a href="{{ url_for('teacher.view_students') }}"
+                            class="group relative overflow-hidden rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-6 hover:bg-emerald-500/10 transition-colors flex flex-col items-center justify-center text-center gap-3">
+                            <div
+                                class="rounded-full bg-emerald-500/20 p-3 text-emerald-600 group-hover:scale-110 transition-transform">
+                                <i data-lucide="users-round" class="h-6 w-6"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-foreground">View Students</h4>
+                                <p class="text-xs text-muted-foreground mt-1">Manage student list</p>
+                            </div>
+                        </a>
+
+                        <a href="{{ url_for('teacher.manage_faces') }}"
+                            class="group relative overflow-hidden rounded-xl border border-sky-500/20 bg-sky-500/5 p-6 hover:bg-sky-500/10 transition-colors flex flex-col items-center justify-center text-center gap-3">
+                            <div
+                                class="rounded-full bg-sky-500/20 p-3 text-sky-600 group-hover:scale-110 transition-transform">
+                                <i data-lucide="scan-face" class="h-6 w-6"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-foreground">Manage Faces</h4>
+                                <p class="text-xs text-muted-foreground mt-1">Register student faces</p>
+                            </div>
+                        </a>
+
+                        <a href="{{ url_for('teacher.class_attendance') }}"
+                            class="group relative overflow-hidden rounded-xl border border-purple-500/20 bg-purple-500/5 p-6 hover:bg-purple-500/10 transition-colors flex flex-col items-center justify-center text-center gap-3">
+                            <div
+                                class="rounded-full bg-purple-500/20 p-3 text-purple-600 group-hover:scale-110 transition-transform">
+                                <i data-lucide="clipboard-list" class="h-6 w-6"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-foreground">Class Attendance</h4>
+                                <p class="text-xs text-muted-foreground mt-1">View historical records</p>
+                            </div>
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0">Subjects</h5>
+        <!-- Right Column: Subjects (Span 3) -->
+        <div class="flex flex-col gap-6 lg:col-span-3 lg:col-start-5">
+            <div class="shadcn-card h-full">
+                <div class="shadcn-card-header border-b border-border pb-4">
+                    <h3 class="shadcn-card-title flex items-center gap-2">
+                        <i data-lucide="book-open" class="h-5 w-5 text-primary"></i>
+                        Your Subjects
+                    </h3>
                 </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
+                <div class="p-0">
+                    <div class="flex flex-col divide-y divide-border">
                         {% for subject in subjects %}
-                        <div class="list-group-item">
-                            <strong>{{ subject.code }}</strong>
-                            <br><small class="text-muted">{{ subject.name }}</small>
+                        <div class="p-4 flex items-center gap-4 hover:bg-muted/20 transition-colors group">
+                            <div
+                                class="h-10 w-10 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs uppercase pt-0.5">
+                                {{ subject.code[:2] }}
+                            </div>
+                            <div class="flex flex-col flex-1 overflow-hidden">
+                                <h6 class="font-semibold text-sm truncate">{{ subject.code }}</h6>
+                                <span class="text-xs text-muted-foreground truncate">{{ subject.name }}</span>
+                            </div>
+                            <i data-lucide="chevron-right"
+                                class="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                        </div>
+                        {% else %}
+                        <div class="p-8 text-center text-muted-foreground text-sm">
+                            <i data-lucide="inbox" class="h-8 w-8 mx-auto mb-2 opacity-50"></i>
+                            No subjects assigned yet
                         </div>
                         {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 {% endblock %}

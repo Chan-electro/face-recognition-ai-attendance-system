@@ -51,7 +51,6 @@ def mark_attendance_face():
                 student_id=student_id,
                 subject_id=subject_id,
                 status='PRESENT',
-                date=datetime.now().date(),
                 marked_by=marker_id
             )
             

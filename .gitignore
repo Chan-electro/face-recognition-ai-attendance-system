@@ -1,0 +1,46 @@
+# Environment variables
+.env
+instance/config.py
+
+# Python generated files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual Environment
+venv/
+env/
+.env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Uploaded Files
+uploads/
+app/static/img/faces/
+app/static/uploads/
+static/img/faces/
+static/uploads/
+instance/
+
+# Flask session
+.flask_session/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# MacOS
+.DS_Store
+
+# AI Models / Data (if you don't track the huge models)
+ai_data/
+ai_models/
+model_data/

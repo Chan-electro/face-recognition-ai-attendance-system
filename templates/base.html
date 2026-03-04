@@ -1,153 +1,301 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Attendance System{% endblock %}</title>
-    
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Material Icons -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                container: {
+                    center: true,
+                    padding: "2rem",
+                    screens: {
+                        "2xl": "1400px",
+                    },
+                },
+                extend: {
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    colors: {
+                        border: "hsl(var(--border))",
+                        input: "hsl(var(--input))",
+                        ring: "hsl(var(--ring))",
+                        background: "hsl(var(--background))",
+                        foreground: "hsl(var(--foreground))",
+                        primary: {
+                            DEFAULT: "hsl(var(--primary))",
+                            foreground: "hsl(var(--primary-foreground))",
+                        },
+                        secondary: {
+                            DEFAULT: "hsl(var(--secondary))",
+                            foreground: "hsl(var(--secondary-foreground))",
+                        },
+                        destructive: {
+                            DEFAULT: "hsl(var(--destructive))",
+                            foreground: "hsl(var(--destructive-foreground))",
+                        },
+                        muted: {
+                            DEFAULT: "hsl(var(--muted))",
+                            foreground: "hsl(var(--muted-foreground))",
+                        },
+                        accent: {
+                            DEFAULT: "hsl(var(--accent))",
+                            foreground: "hsl(var(--accent-foreground))",
+                        },
+                        popover: {
+                            DEFAULT: "hsl(var(--popover))",
+                            foreground: "hsl(var(--popover-foreground))",
+                        },
+                        card: {
+                            DEFAULT: "hsl(var(--card))",
+                            foreground: "hsl(var(--card-foreground))",
+                        },
+                    },
+                    borderRadius: {
+                        lg: "var(--radius)",
+                        md: "calc(var(--radius) - 2px)",
+                        sm: "calc(var(--radius) - 4px)",
+                    },
+                },
+            },
+        }
+    </script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
-    
+
     {% block extra_css %}{% endblock %}
 </head>
-<body>
+
+<body class="min-h-screen bg-background text-foreground font-sans antialiased flex flex-col">
     {% if session.user_id %}
     <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">
-                <i class="material-icons align-middle">school</i>
-                Attendance System
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+    <header
+        class="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div class="container flex h-14 items-center justify-between">
+            <div class="flex items-center gap-6 md:gap-8">
+                <a href="/" class="flex items-center space-x-2">
+                    <i data-lucide="graduation-cap" class="h-6 w-6 text-primary"></i>
+                    <span class="font-bold inline-block">Attendance AI</span>
+                </a>
+
+                <!-- Desktop Nav -->
+                <nav class="hidden md:flex items-center space-x-4 text-sm font-medium">
                     {% if session.role == 'STUDENT' %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('student.dashboard') }}">
-                            <i class="material-icons align-middle">dashboard</i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('student.attendance') }}">
-                            <i class="material-icons align-middle">event_available</i> Attendance
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('student.ai_assistant') }}">
-                            <i class="material-icons align-middle">smart_toy</i> AI Assistant
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('student.timetable') }}">
-                            <i class="material-icons align-middle">schedule</i> Timetable
-                        </a>
-                    </li>
+                    <a href="{{ url_for('student.dashboard') }}"
+                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
+                            data-lucide="layout-dashboard" class="h-4 w-4"></i> Dashboard</a>
+                    <a href="{{ url_for('student.attendance') }}"
+                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
+                            data-lucide="calendar-check" class="h-4 w-4"></i> Attendance</a>
+                    <a href="{{ url_for('student.ai_assistant') }}"
+                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
+                            data-lucide="bot" class="h-4 w-4"></i> AI Assistant</a>
+                    <a href="{{ url_for('student.timetable') }}"
+                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
+                            data-lucide="clock" class="h-4 w-4"></i> Timetable</a>
                     {% elif session.role == 'TEACHER' %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('teacher.dashboard') }}">
-                            <i class="material-icons align-middle">dashboard</i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('teacher.mark_attendance_page') }}">
-                            <i class="material-icons align-middle">camera_alt</i> Mark Attendance
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('teacher.view_students') }}">
-                            <i class="material-icons align-middle">people</i> Students
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('teacher.manage_faces') }}">
-                            <i class="material-icons align-middle">face</i> Manage Faces
-                        </a>
-                    </li>
+                    <a href="{{ url_for('teacher.dashboard') }}"
+                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
+                            data-lucide="layout-dashboard" class="h-4 w-4"></i> Dashboard</a>
+                    <a href="{{ url_for('teacher.mark_attendance_page') }}"
+                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
+                            data-lucide="camera" class="h-4 w-4"></i> Mark Attendance</a>
+                    <a href="{{ url_for('teacher.view_students') }}"
+                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
+                            data-lucide="users" class="h-4 w-4"></i> Students</a>
+                    <a href="{{ url_for('teacher.manage_faces') }}"
+                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
+                            data-lucide="user-square" class="h-4 w-4"></i> Manage Faces</a>
                     {% elif session.role == 'ADMIN' %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
-                            <i class="material-icons align-middle">dashboard</i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.manage_users') }}">
-                            <i class="material-icons align-middle">people</i> Users
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.manage_timetable') }}">
-                            <i class="material-icons align-middle">schedule</i> Timetable
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.ai_training') }}">
-                            <i class="material-icons align-middle">psychology</i> AI Training
-                        </a>
-                    </li>
+                    <a href="{{ url_for('admin.dashboard') }}"
+                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
+                            data-lucide="layout-dashboard" class="h-4 w-4"></i> Dashboard</a>
+                    <a href="{{ url_for('admin.manage_users') }}"
+                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
+                            data-lucide="users" class="h-4 w-4"></i> Users</a>
+                    <a href="{{ url_for('admin.manage_timetable') }}"
+                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
+                            data-lucide="clock" class="h-4 w-4"></i> Timetable</a>
+                    <a href="{{ url_for('admin.ai_training') }}"
+                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
+                            data-lucide="brain" class="h-4 w-4"></i> AI Training</a>
                     {% endif %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="material-icons align-middle">account_circle</i>
-                            {{ session.full_name }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
-                                <i class="material-icons align-middle">logout</i> Logout
-                            </a></li>
-                        </ul>
-                    </li>
-                </ul>
+                </nav>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <!-- User dropdown -->
+                <div class="relative">
+                    <button id="userDropdownBtn"
+                        class="flex items-center gap-2 text-sm font-medium transition-colors hover:text-foreground/80 focus:outline-none">
+                        <div class="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                            <i data-lucide="user" class="h-4 w-4"></i>
+                        </div>
+                        <span class="hidden md:inline-block">{{ session.full_name }}</span>
+                        <i data-lucide="chevron-down" class="h-4 w-4 text-muted-foreground hidden md:inline-block"></i>
+                    </button>
+                    <!-- Dropdown Content -->
+                    <div id="userDropdownContent"
+                        class="absolute right-0 top-full mt-2 w-48 rounded-md border border-border bg-popover text-popover-foreground shadow-md hidden z-50">
+                        <div class="px-3 py-2 text-sm font-semibold border-b border-border">{{ session.full_name }}
+                        </div>
+                        <div class="p-1">
+                            <a href="{{ url_for('auth.logout') }}"
+                                class="cursor-pointer relative flex w-full select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground text-destructive hover:text-destructive">
+                                <i data-lucide="log-out" class="mr-2 h-4 w-4"></i>
+                                <span>Logout</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn"
+                    class="md:hidden flex items-center justify-center h-8 w-8 rounded-md text-foreground hover:bg-accent focus:outline-none">
+                    <i data-lucide="menu" class="h-5 w-5"></i>
+                </button>
             </div>
         </div>
-    </nav>
+
+        <!-- Mobile Nav Menu -->
+        <div id="mobileMenuContent" class="hidden border-b border-border bg-background p-4 md:hidden">
+            <nav class="flex flex-col space-y-3 text-sm font-medium">
+                {% if session.role == 'STUDENT' %}
+                <a href="{{ url_for('student.dashboard') }}" class="flex items-center gap-2 text-foreground/70"><i
+                        data-lucide="layout-dashboard" class="h-4 w-4"></i> Dashboard</a>
+                <a href="{{ url_for('student.attendance') }}" class="flex items-center gap-2 text-foreground/70"><i
+                        data-lucide="calendar-check" class="h-4 w-4"></i> Attendance</a>
+                <a href="{{ url_for('student.ai_assistant') }}" class="flex items-center gap-2 text-foreground/70"><i
+                        data-lucide="bot" class="h-4 w-4"></i> AI Assistant</a>
+                <a href="{{ url_for('student.timetable') }}" class="flex items-center gap-2 text-foreground/70"><i
+                        data-lucide="clock" class="h-4 w-4"></i> Timetable</a>
+                {% elif session.role == 'TEACHER' %}
+                <a href="{{ url_for('teacher.dashboard') }}" class="flex items-center gap-2 text-foreground/70"><i
+                        data-lucide="layout-dashboard" class="h-4 w-4"></i> Dashboard</a>
+                <a href="{{ url_for('teacher.mark_attendance_page') }}"
+                    class="flex items-center gap-2 text-foreground/70"><i data-lucide="camera" class="h-4 w-4"></i> Mark
+                    Attendance</a>
+                <a href="{{ url_for('teacher.view_students') }}" class="flex items-center gap-2 text-foreground/70"><i
+                        data-lucide="users" class="h-4 w-4"></i> Students</a>
+                <a href="{{ url_for('teacher.manage_faces') }}" class="flex items-center gap-2 text-foreground/70"><i
+                        data-lucide="user-square" class="h-4 w-4"></i> Manage Faces</a>
+                {% elif session.role == 'ADMIN' %}
+                <a href="{{ url_for('admin.dashboard') }}" class="flex items-center gap-2 text-foreground/70"><i
+                        data-lucide="layout-dashboard" class="h-4 w-4"></i> Dashboard</a>
+                <a href="{{ url_for('admin.manage_users') }}" class="flex items-center gap-2 text-foreground/70"><i
+                        data-lucide="users" class="h-4 w-4"></i> Users</a>
+                <a href="{{ url_for('admin.manage_timetable') }}" class="flex items-center gap-2 text-foreground/70"><i
+                        data-lucide="clock" class="h-4 w-4"></i> Timetable</a>
+                <a href="{{ url_for('admin.ai_training') }}" class="flex items-center gap-2 text-foreground/70"><i
+                        data-lucide="brain" class="h-4 w-4"></i> AI Training</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
     {% endif %}
-    
-    <!-- Flash Messages -->
-    <div class="container mt-3">
+
+    <!-- Flash Messages (styled as toast notifications) -->
+    <div class="fixed top-16 right-4 z-50 flex flex-col gap-2 pointer-events-none" id="flash-container">
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                {% endfor %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="pointer-events-auto rounded-md border border-border bg-background p-4 shadow-md max-w-sm flex items-start gap-3 animate-in"
+            role="alert">
+            {% if category == 'success' %}
+            <i data-lucide="check-circle-2" class="h-5 w-5 text-green-500 mt-0.5"></i>
+            {% elif category == 'danger' or category == 'error' %}
+            <i data-lucide="alert-circle" class="h-5 w-5 text-destructive mt-0.5"></i>
+            {% else %}
+            <i data-lucide="info" class="h-5 w-5 text-primary mt-0.5"></i>
             {% endif %}
+            <div class="text-sm font-medium text-foreground">{{ message }}</div>
+            <button type="button" class="ml-auto text-muted-foreground hover:text-foreground"
+                onclick="this.parentElement.remove()">
+                <i data-lucide="x" class="h-4 w-4"></i>
+            </button>
+        </div>
+        {% endfor %}
+        {% endif %}
         {% endwith %}
     </div>
-    
+
     <!-- Main Content -->
-    <main class="{% if session.user_id %}container-fluid{% endif %} mt-4">
+    <main class="flex-1 container py-6 mx-auto animate-in">
         {% block content %}{% endblock %}
     </main>
-    
+
     <!-- Footer -->
-    <footer class="bg-light text-center text-muted py-3 mt-5">
-        <div class="container">
-            <p class="mb-0">© 2024 Face Recognition Attendance System - All Rights Reserved</p>
+    <footer class="border-t border-border py-6 md:py-0 bg-background">
+        <div class="container mx-auto flex flex-col items-center justify-between gap-4 md:h-16 md:flex-row">
+            <p class="text-sm text-muted-foreground leading-loose text-center md:text-left">
+                &copy; {{ current_year|default('2024') }} Face Recognition Attendance System. All Rights Reserved.
+            </p>
         </div>
     </footer>
-    
-    <!-- Bootstrap 5 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
+
+    <!-- App JS -->
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Dropdown Logic
+        const userDropdownBtn = document.getElementById('userDropdownBtn');
+        const userDropdownContent = document.getElementById('userDropdownContent');
+        if (userDropdownBtn && userDropdownContent) {
+            userDropdownBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdownContent.classList.toggle('hidden');
+            });
+            document.addEventListener('click', (e) => {
+                if (!userDropdownContent.contains(e.target)) {
+                    userDropdownContent.classList.add('hidden');
+                }
+            });
+        }
+
+        // Mobile Menu Logic
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenuContent = document.getElementById('mobileMenuContent');
+        if (mobileMenuBtn && mobileMenuContent) {
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenuContent.classList.toggle('hidden');
+            });
+        }
+
+        // Auto-dismiss flashes after 5s
+        setTimeout(() => {
+            const flashes = document.querySelectorAll('#flash-container [role="alert"]');
+            flashes.forEach(f => {
+                f.style.opacity = '0';
+                f.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => f.remove(), 500);
+            });
+        }, 5000);
+    </script>
+
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    
+
     {% block extra_js %}{% endblock %}
 </body>
+
 </html>
