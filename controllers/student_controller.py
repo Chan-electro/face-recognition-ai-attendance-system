@@ -180,3 +180,48 @@ def profile():
     return render_template('student/profile.html', **context)
 
 
+@student_bp.route('/notes')
+@role_required('STUDENT')
+def notes():
+    """Browse available notes"""
+    user = User.query.get(session.get('user_id'))
+    subjects = Subject.query.filter_by(is_active=True).all()
+
+    from models.note import Note
+    notes_query = Note.query.filter_by(is_active=True).order_by(Note.uploaded_at.desc())
+
+    subject_filter = request.args.get('subject_id', type=int)
+    if subject_filter:
+        notes_query = notes_query.filter_by(subject_id=subject_filter)
+
+    all_notes = notes_query.all()
+
+    context = {
+        'user': user,
+        'subjects': subjects,
+        'notes': all_notes,
+        'selected_subject_id': subject_filter
+    }
+    return render_template('student/notes.html', **context)
+
+
+@student_bp.route('/notes/<int:note_id>/download')
+@role_required('STUDENT')
+def download_note(note_id):
+    """Download a specific note"""
+    from flask import send_file
+    from models.note import Note
+    import os
+
+    note = Note.query.get(note_id)
+    if not note or not note.is_active:
+        from flask import abort
+        abort(404)
+
+    if os.path.exists(note.filepath):
+        return send_file(note.filepath, as_attachment=True, download_name=note.filename)
+    else:
+        from flask import abort
+        abort(404)
+
+

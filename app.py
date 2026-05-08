@@ -17,6 +17,7 @@ def create_app(config_name='development'):
     os.makedirs(app.config['FACE_IMAGES_FOLDER'], exist_ok=True)
     os.makedirs(app.config['AI_TRAINING_FOLDER'], exist_ok=True)
     os.makedirs(app.config['EXPORTS_FOLDER'], exist_ok=True)
+    os.makedirs(app.config['NOTES_FOLDER'], exist_ok=True)
     os.makedirs(app.config['AI_MODEL_PATH'], exist_ok=True)
     os.makedirs(os.path.join(app.config['BASE_DIR'], 'database'), exist_ok=True)
     
@@ -41,6 +42,18 @@ def create_app(config_name='development'):
     # Create database tables
     with app.app_context():
         init_database(app)
+        # Migrate: add 'section' column to users if missing
+        try:
+            from sqlalchemy import text
+            with db.engine.connect() as conn:
+                result = conn.execute(text("PRAGMA table_info(users)"))
+                columns = [row[1] for row in result]
+                if 'section' not in columns:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN section VARCHAR(10)"))
+                    conn.commit()
+                    print("Migration: added 'section' column to users table")
+        except Exception as e:
+            print(f"Migration check: {e}")
         seed_database(app)
     
     # Initialize AI service (RAG agent backed by OpenRouter)
@@ -52,12 +65,12 @@ def create_app(config_name='development'):
     from services.face_recognition_service import get_face_service
     with app.app_context():
         face_service = get_face_service(app.config)
-        print("✓ Face recognition service initialized")
+        print("Face recognition service initialized")
     
     print("\n" + "="*60)
-    print("🎓 Face Recognition Attendance System Started!")
+    print("Face Recognition Attendance System Started!")
     print("="*60)
-    print(f"  AI Backend : OpenRouter RAG (acree-ai/trinity-large-preview:free)")
+    print(f"  AI Backend : OpenRouter RAG (minimax/minimax-m2.5:free)")
     print(f"  URL        : http://localhost:5000")
     print("="*60 + "\n")
     

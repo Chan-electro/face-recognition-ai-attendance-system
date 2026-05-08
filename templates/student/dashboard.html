@@ -235,6 +235,9 @@
     </div>
 </div>
 
+<script id="subject-data" type="application/json">
+    {{ subject_attendance | tojson | safe }}
+</script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const ctx = document.getElementById('attendanceChart');
@@ -242,53 +245,63 @@
             Chart.defaults.font.family = "'Inter', sans-serif";
             Chart.defaults.color = "hsl(var(--foreground) / 0.7)";
 
+            const subjectDataEl = document.getElementById('subject-data');
+            let subjectAttendance = [];
+            if (subjectDataEl) {
+                try {
+                    subjectAttendance = JSON.parse(subjectDataEl.textContent);
+                } catch (e) {
+                    console.error("Could not parse attendance data", e);
+                }
+            }
+
             const data = {
-                labels: [{% for s in subject_attendance %}'{{ s.subject_code }}', {% endfor %}],
-        datasets: [{
-            label: 'Attendance %',
-            data: [{% for s in subject_attendance %}{{ s.percentage }}, {% endfor %}],
-        backgroundColor: [{% for s in subject_attendance %}'{% if s.percentage >= 75 %}rgba(22, 163, 74, 0.8){% else %}rgba(220, 38, 38, 0.8){% endif %}', {% endfor %}],
-    borderRadius: 4,
+                labels: subjectAttendance.map(s => s.subject_code),
+                datasets: [{
+                    label: 'Attendance %',
+                    data: subjectAttendance.map(s => s.percentage),
+                    backgroundColor: subjectAttendance.map(s => s.percentage >= 75 ? 'rgba(22, 163, 74, 0.8)' : 'rgba(220, 38, 38, 0.8)'),
+                    borderRadius: 4,
                 }]
             };
 
-    new Chart(ctx, {
-        type: 'bar',
-        data: data,
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: 'hsl(var(--popover))',
-                    titleColor: 'hsl(var(--popover-foreground))',
-                    bodyColor: 'hsl(var(--popover-foreground))',
-                    borderColor: 'hsl(var(--border))',
-                    borderWidth: 1,
-                    padding: 10,
-                    displayColors: false,
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    grid: {
-                        color: 'hsl(var(--border))',
-                        drawBorder: false,
+            new Chart(ctx, {
+                type: 'bar',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'hsl(var(--popover))',
+                            titleColor: 'hsl(var(--popover-foreground))',
+                            bodyColor: 'hsl(var(--popover-foreground))',
+                            borderColor: 'hsl(var(--border))',
+                            borderWidth: 1,
+                            padding: 10,
+                            displayColors: false,
+                        }
                     },
-                    ticks: {
-                        maxTicksLimit: 5,
-                        callback: function (value) { return value + '%'; }
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                color: 'hsl(var(--border))',
+                                drawBorder: false,
+                            },
+                            ticks: {
+                                maxTicksLimit: 5,
+                                callback: function (value) { return value + '%'; }
+                            }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
                     }
-                },
-                x: {
-                    grid: { display: false }
                 }
-            }
-        }
-    });
+            });
         }
     });
 </script>

@@ -1,5 +1,5 @@
-from flask import Blueprint, request, jsonify
-from services.ai_service import get_ai_service
+from flask import Blueprint, request, jsonify  # pyre-ignore[21]
+from services.ai_service import get_ai_service  # pyre-ignore[21]
 
 ai_bp = Blueprint('ai', __name__, url_prefix='/api')
 
@@ -39,7 +39,7 @@ def ask_ai():
             }), 400
         
         # Get AI service
-        from flask import current_app
+        from flask import current_app  # pyre-ignore[21]
         ai_service = get_ai_service(current_app.config)
         
         if not ai_service:
@@ -48,10 +48,11 @@ def ask_ai():
                 'error': 'AI service not available'
             }), 503
         
-        # Ask question — pass student_id so RAG includes personal attendance context
-        from flask import session
-        student_id = session.get('user_id') if session.get('role') == 'STUDENT' else None
-        result = ai_service.ask(question, student_id=student_id)
+        # Ask question — pass user_id and role so RAG includes relevant context
+        from flask import session  # pyre-ignore[21]
+        user_id = session.get('user_id')
+        user_role = session.get('role')
+        result = ai_service.ask(question, user_id=user_id, user_role=user_role)
         
         return jsonify({
             'success': True,
@@ -70,7 +71,7 @@ def ask_ai():
 def ai_stats():
     """Get AI model statistics"""
     try:
-        from flask import current_app
+        from flask import current_app  # pyre-ignore[21]
         ai_service = get_ai_service(current_app.config)
         
         if ai_service:

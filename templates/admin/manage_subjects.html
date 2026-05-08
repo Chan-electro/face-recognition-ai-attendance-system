@@ -3,43 +3,113 @@
 {% block title %}Manage Subjects - Admin{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h2 class="mb-4">
-        <i class="material-icons align-middle">book</i>
-        Subject Management
-    </h2>
-
-    <div class="card">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">All Subjects</h5>
+<div class="flex flex-col gap-6">
+    <div class="flex justify-between items-center flex-wrap gap-4">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                <i data-lucide="book-open" class="h-8 w-8 text-primary"></i>
+                Subject Management
+            </h1>
+            <p class="text-muted-foreground mt-1">View all registered subjects and their assigned faculty.</p>
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
+    </div>
+
+    <!-- Stats Row -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="shadcn-card p-4">
+            <div class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Subjects</div>
+            <div class="text-2xl font-bold text-foreground mt-1">{{ subjects | length }}</div>
+        </div>
+        <div class="shadcn-card p-4">
+            <div class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Active</div>
+            <div class="text-2xl font-bold text-green-600 mt-1">{{ subjects | selectattr('is_active') | list | length }}</div>
+        </div>
+        <div class="shadcn-card p-4">
+            <div class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Credits</div>
+            <div class="text-2xl font-bold text-primary mt-1">{{ subjects | sum(attribute='credits') }}</div>
+        </div>
+        <div class="shadcn-card p-4">
+            <div class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Semesters</div>
+            <div class="text-2xl font-bold text-muted-foreground mt-1">{{ subjects | map(attribute='semester') | unique | list | length }}</div>
+        </div>
+    </div>
+
+    <!-- Subjects Table -->
+    <div class="shadcn-card overflow-hidden">
+        <div class="p-0">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left align-middle">
+                    <thead class="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
                         <tr>
-                            <th>Code</th>
-                            <th>Name</th>
-                            <th>Faculty</th>
-                            <th>Credits</th>
-                            <th>Semester</th>
-                            <th>Status</th>
+                            <th class="px-6 py-4 font-medium">Subject</th>
+                            <th class="px-6 py-4 font-medium">Faculty</th>
+                            <th class="px-6 py-4 font-medium">Credits</th>
+                            <th class="px-6 py-4 font-medium">Semester</th>
+                            <th class="px-6 py-4 font-medium">Status</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="divide-y divide-border">
                         {% for subject in subjects %}
-                        <tr>
-                            <td><strong>{{ subject.code }}</strong></td>
-                            <td>{{ subject.name }}</td>
-                            <td>{{ subject.faculty.name if subject.faculty else 'Not assigned' }}</td>
-                            <td>{{ subject.credits }}</td>
-                            <td>{{ subject.semester }}</td>
-                            <td>
-                                {% if subject.is_active %}
-                                <span class="badge bg-success">Active</span>
+                        <tr class="hover:bg-muted/30 transition-colors">
+                            <!-- Subject -->
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="h-10 w-10 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center">
+                                        <span class="text-xs font-bold text-primary">{{ subject.code[:3] }}</span>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-foreground">{{ subject.name }}</div>
+                                        <div class="text-xs text-muted-foreground font-mono">{{ subject.code }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <!-- Faculty -->
+                            <td class="px-6 py-4">
+                                {% if subject.faculty %}
+                                <div class="flex items-center gap-2">
+                                    <div class="h-7 w-7 shrink-0 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center text-xs font-bold">
+                                        {{ subject.faculty.name[:1].upper() }}
+                                    </div>
+                                    <span class="text-sm text-foreground">{{ subject.faculty.name }}</span>
+                                </div>
                                 {% else %}
-                                <span class="badge bg-secondary">Inactive</span>
+                                <span class="text-xs text-muted-foreground italic">Not assigned</span>
                                 {% endif %}
+                            </td>
+                            <!-- Credits -->
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center justify-center h-7 w-7 rounded-full bg-accent text-accent-foreground text-xs font-bold">
+                                    {{ subject.credits }}
+                                </span>
+                            </td>
+                            <!-- Semester -->
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">
+                                    Sem {{ subject.semester }}
+                                </span>
+                            </td>
+                            <!-- Status -->
+                            <td class="px-6 py-4">
+                                {% if subject.is_active %}
+                                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-green-600">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Active
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-muted-foreground"></div> Inactive
+                                </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-16 text-center text-muted-foreground">
+                                <div class="flex flex-col items-center justify-center gap-3">
+                                    <div class="h-14 w-14 rounded-full bg-muted flex items-center justify-center">
+                                        <i data-lucide="book-open" class="h-7 w-7 opacity-40"></i>
+                                    </div>
+                                    <p class="text-sm">No subjects found.</p>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}

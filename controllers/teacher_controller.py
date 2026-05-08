@@ -105,12 +105,25 @@ def mark_attendance():
 @teacher_bp.route('/students')
 @role_required('TEACHER')
 def view_students():
-    """View student list"""
+    """View student list with filters"""
     user = User.query.get(session.get('user_id'))
-    
-    # Get all active students
-    students = User.query.filter_by(role='STUDENT', is_active=True).all()
-    
+
+    # Filter params
+    dept_filter = request.args.get('department', '').strip()
+    sem_filter = request.args.get('semester', type=int)
+    sec_filter = request.args.get('section', '').strip()
+
+    # Build query
+    query = User.query.filter_by(role='STUDENT', is_active=True)
+    if dept_filter:
+        query = query.filter_by(department=dept_filter)
+    if sem_filter:
+        query = query.filter_by(semester=sem_filter)
+    if sec_filter:
+        query = query.filter_by(section=sec_filter)
+
+    students = query.order_by(User.full_name).all()
+
     # Get attendance stats for each student
     student_data = []
     for student in students:
@@ -119,12 +132,25 @@ def view_students():
             'student': student,
             'stats': stats
         })
-    
+
+    # Distinct values for filter dropdowns
+    all_students = User.query.filter_by(role='STUDENT', is_active=True).all()
+    departments = sorted(set(s.department for s in all_students if s.department))
+    semesters = sorted(set(s.semester for s in all_students if s.semester))
+    sections = sorted(set(s.section for s in all_students if s.section))
+
     context = {
         'user': user,
-        'student_data': student_data
+        'student_data': student_data,
+        'departments': departments,
+        'semesters': semesters,
+        'sections': sections,
+        'dept_filter': dept_filter,
+        'sem_filter': sem_filter,
+        'sec_filter': sec_filter,
+        'total_students': len(student_data)
     }
-    
+
     return render_template('teacher/view_students.html', **context)
 
 
@@ -191,3 +217,132 @@ def download_report():
     else:
         flash('Failed to generate report', 'danger')
         return redirect(url_for('teacher.class_attendance'))
+
+
+@teacher_bp.route('/upload-attendance')
+@role_required('TEACHER')
+def upload_attendance_page():
+    """Attendance upload page for teachers"""
+    user = User.query.get(session.get('user_id'))
+    return render_template('teacher/upload_attendance.html', user=user)
+
+
+@teacher_bp.route('/upload-attendance', methods=['POST'])
+@role_required('TEACHER')
+def upload_attendance():
+    """Handle attendance Excel/CSV upload"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'success': False, 'message': 'No file provided'}), 400
+
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'success': False, 'message': 'No file selected'}), 400
+
+        from utils.file_utils import save_uploaded_file
+        filepath = save_uploaded_file(file, 'exports')
+        if not filepath:
+            return jsonify({'success': False, 'message': 'Invalid file type'}), 400
+
+        from services.excel_service import ExcelService
+        result = ExcelService.import_attendance(filepath, uploaded_by=session.get('user_id'))
+
+        import os
+        try:
+            os.remove(filepath)
+        except OSError:
+            pass
+
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@teacher_bp.route('/notes')
+@role_required('TEACHER')
+def notes_page():
+    """Teacher notes management"""
+    user = User.query.get(session.get('user_id'))
+    subjects = Subject.query.filter_by(is_active=True).all()
+
+    from models.note import Note
+    notes = Note.query.filter_by(uploaded_by=user.id, is_active=True).order_by(Note.uploaded_at.desc()).all()
+
+    context = {
+        'user': user,
+        'subjects': subjects,
+        'notes': notes
+    }
+    return render_template('teacher/notes.html', **context)
+
+
+@teacher_bp.route('/notes/upload', methods=['POST'])
+@role_required('TEACHER')
+def upload_note():
+    """Upload a new note/study material"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'success': False, 'message': 'No file provided'}), 400
+
+        file = request.files['file']
+        title = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
+        subject_id = request.form.get('subject_id')
+
+        if not title or not subject_id:
+            return jsonify({'success': False, 'message': 'Title and Subject are required'}), 400
+
+        if file.filename == '':
+            return jsonify({'success': False, 'message': 'No file selected'}), 400
+
+        from flask import current_app
+        from utils.file_utils import save_uploaded_file
+        filepath = save_uploaded_file(file, 'notes')
+
+        if not filepath:
+            return jsonify({'success': False, 'message': 'Invalid file type'}), 400
+
+        import os
+        file_size = os.path.getsize(filepath)
+        user = User.query.get(session.get('user_id'))
+
+        from models.note import Note
+        note = Note(
+            title=title,
+            description=description,
+            filename=os.path.basename(filepath),
+            filepath=filepath,
+            file_size=file_size,
+            subject_id=int(subject_id),
+            uploaded_by=user.id,
+            semester=user.semester,
+            department=user.department
+        )
+        db.session.add(note)
+        db.session.commit()
+
+        return jsonify({'success': True, 'message': f'Note "{title}" uploaded successfully'})
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@teacher_bp.route('/notes/<int:note_id>/delete', methods=['POST'])
+@role_required('TEACHER')
+def delete_note(note_id):
+    """Delete a note"""
+    try:
+        from models.note import Note
+        note = Note.query.get(note_id)
+        if not note:
+            return jsonify({'success': False, 'message': 'Note not found'}), 404
+
+        note.is_active = False
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Note deleted successfully'})
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500

@@ -67,34 +67,58 @@ def manage_users():
 @admin_bp.route('/users/add', methods=['POST'])
 @role_required('ADMIN')
 def add_user():
-    """Add new user"""
+    """Add new user (supports both form and AJAX)"""
+    is_ajax = request.content_type and 'json' in request.content_type
     try:
-        data = request.form
-        
-        username = data.get('username')
-        password = data.get('password')
-        email = data.get('email')
-        full_name = data.get('full_name')
-        role = data.get('role')
-        student_id = data.get('student_id')
-        department = data.get('department')
-        semester = int(data.get('semester')) if data.get('semester') else None
-        
+        if is_ajax:
+            data = request.get_json()
+        else:
+            data = request.form
+
+        username = data.get('username', '').strip()
+        password = data.get('password', '').strip()
+        email = data.get('email', '').strip()
+        full_name = data.get('full_name', '').strip()
+        role = data.get('role', '').strip()
+        student_id = data.get('student_id', '').strip()
+        department = data.get('department', '').strip()
+        section = data.get('section', '').strip()
+        semester_raw = data.get('semester')
+        semester = int(semester_raw) if semester_raw and str(semester_raw).strip().isdigit() else None
+
         # Validate
         if not all([username, password, email, full_name, role]):
-            flash('All required fields must be filled', 'danger')
+            msg = 'All required fields must be filled'
+            if is_ajax:
+                return jsonify({'success': False, 'message': msg}), 400
+            flash(msg, 'danger')
             return redirect(url_for('admin.manage_users'))
-        
+
         # Check if username exists
         if User.query.filter_by(username=username).first():
-            flash('Username already exists', 'danger')
+            msg = f'Username "{username}" already exists'
+            if is_ajax:
+                return jsonify({'success': False, 'message': msg}), 400
+            flash(msg, 'danger')
             return redirect(url_for('admin.manage_users'))
-        
+
         # Check if email exists
         if User.query.filter_by(email=email).first():
-            flash('Email already exists', 'danger')
+            msg = f'Email "{email}" already exists'
+            if is_ajax:
+                return jsonify({'success': False, 'message': msg}), 400
+            flash(msg, 'danger')
             return redirect(url_for('admin.manage_users'))
-        
+
+        # Check student_id uniqueness
+        if role.upper() == 'STUDENT' and student_id:
+            if User.query.filter_by(student_id=student_id).first():
+                msg = f'Student ID "{student_id}" already exists'
+                if is_ajax:
+                    return jsonify({'success': False, 'message': msg}), 400
+                flash(msg, 'danger')
+                return redirect(url_for('admin.manage_users'))
+
         # Create user
         new_user = User(
             username=username,
@@ -102,20 +126,27 @@ def add_user():
             full_name=full_name,
             role=role.upper(),
             student_id=student_id if role.upper() == 'STUDENT' else None,
-            department=department,
-            semester=semester if role.upper() == 'STUDENT' else None
+            department=department if department else None,
+            semester=semester if role.upper() == 'STUDENT' else None,
+            section=section if role.upper() == 'STUDENT' and section else None
         )
         new_user.set_password(password)
-        
+
         db.session.add(new_user)
         db.session.commit()
-        
-        flash(f'User {full_name} added successfully', 'success')
+
+        msg = f'User {full_name} added successfully'
+        if is_ajax:
+            return jsonify({'success': True, 'message': msg, 'user': new_user.to_dict()})
+        flash(msg, 'success')
         return redirect(url_for('admin.manage_users'))
-        
+
     except Exception as e:
         db.session.rollback()
-        flash(f'Error adding user: {str(e)}', 'danger')
+        msg = f'Error adding user: {str(e)}'
+        if is_ajax:
+            return jsonify({'success': False, 'message': msg}), 500
+        flash(msg, 'danger')
         return redirect(url_for('admin.manage_users'))
 
 
@@ -368,23 +399,24 @@ def manage_faculty():
 @admin_bp.route('/manage-faces')
 @role_required('ADMIN')
 def manage_faces():
-    """Manage student facial data"""
+    """Manage student and teacher facial data"""
     user = User.query.get(session.get('user_id'))
-    students = User.query.filter_by(role='STUDENT', is_active=True).all()
+    # Fetch both Students and Teachers for face registration
+    users_for_faces = User.query.filter(User.role.in_(['STUDENT', 'TEACHER', 'ADMIN']), User.is_active==True).all()
     
-    # Check which students have face encodings
-    student_faces = []
-    for student in students:
-        encodings = student.face_encodings.all()
-        student_faces.append({
-            'student': student,
+    # Check which users have face encodings
+    user_faces = []
+    for u in users_for_faces:
+        encodings = u.face_encodings.all()
+        user_faces.append({
+            'user': u,
             'has_encoding': len(encodings) > 0,
             'encoding_count': len(encodings)
         })
     
     context = {
         'user': user,
-        'student_faces': student_faces
+        'user_faces': user_faces
     }
     
     return render_template('admin/manage_faces.html', **context)
@@ -435,10 +467,10 @@ def add_face():
         )
         
         if face_enc:
-            student = User.query.get(student_id)
+            registered_user = User.query.get(student_id)
             return jsonify({
                 'success': True,
-                'message': f"Face encoding added for {student.full_name}"
+                'message': f"Face encoding added for {registered_user.full_name}"
             })
         else:
             # Clean up file if encoding failed
@@ -453,3 +485,56 @@ def add_face():
         print(f"Error adding face: {e}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
+
+@admin_bp.route('/upload-excel')
+@role_required('ADMIN')
+def upload_excel_page():
+    """Excel upload page"""
+    user = User.query.get(session.get('user_id'))
+    return render_template('admin/upload_excel.html', user=user)
+
+
+@admin_bp.route('/upload-excel', methods=['POST'])
+@role_required('ADMIN')
+def upload_excel():
+    """Handle Excel/CSV file upload for bulk import"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'success': False, 'message': 'No file provided'}), 400
+
+        file = request.files['file']
+        upload_type = request.form.get('upload_type', 'attendance')
+
+        if file.filename == '':
+            return jsonify({'success': False, 'message': 'No file selected'}), 400
+
+        # Save file temporarily
+        from utils.file_utils import save_uploaded_file
+        filepath = save_uploaded_file(file, 'exports')
+
+        if not filepath:
+            return jsonify({'success': False, 'message': 'Invalid file type. Use .xlsx, .xls, or .csv'}), 400
+
+        # Process based on type
+        from services.excel_service import ExcelService
+        user_id = session.get('user_id')
+
+        if upload_type == 'attendance':
+            result = ExcelService.import_attendance(filepath, uploaded_by=user_id)
+        elif upload_type == 'marks':
+            result = ExcelService.import_internal_marks(filepath, uploaded_by=user_id)
+        elif upload_type == 'students':
+            result = ExcelService.import_students(filepath)
+        else:
+            result = {'success': False, 'message': 'Invalid upload type'}
+
+        # Clean up temp file
+        try:
+            os.remove(filepath)
+        except OSError:
+            pass
+
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500

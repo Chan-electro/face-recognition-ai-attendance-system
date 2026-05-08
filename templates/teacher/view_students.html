@@ -1,49 +1,160 @@
 {% extends "base.html" %}
 
-{% block title %}View Students{% endblock %}
+{% block title %}Student List - Teacher{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h2 class="mb-4">
-        <i class="material-icons align-middle">people</i>
-        Student List
-    </h2>
+<div class="flex flex-col gap-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center flex-wrap gap-4">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                <i data-lucide="users" class="h-8 w-8 text-primary"></i>
+                Student Directory
+            </h1>
+            <p class="text-muted-foreground mt-1">Browse and filter all registered students.
+                <span class="font-medium text-foreground">{{ total_students }}</span> student(s) found.
+            </p>
+        </div>
+    </div>
 
-    <div class="card">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
+    <!-- Filters -->
+    <div class="shadcn-card p-4">
+        <form method="GET" action="{{ url_for('teacher.view_students') }}" class="flex flex-wrap items-end gap-4">
+            <!-- Department -->
+            <div class="grid gap-1.5 min-w-[160px]">
+                <label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Department</label>
+                <select name="department"
+                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                    <option value="">All Departments</option>
+                    {% for d in departments %}
+                    <option value="{{ d }}" {% if dept_filter == d %}selected{% endif %}>{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Semester -->
+            <div class="grid gap-1.5 min-w-[120px]">
+                <label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Semester</label>
+                <select name="semester"
+                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                    <option value="">All</option>
+                    {% for s in semesters %}
+                    <option value="{{ s }}" {% if sem_filter == s %}selected{% endif %}>Semester {{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Section -->
+            <div class="grid gap-1.5 min-w-[100px]">
+                <label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Section</label>
+                <select name="section"
+                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                    <option value="">All</option>
+                    {% for sc in sections %}
+                    <option value="{{ sc }}" {% if sec_filter == sc %}selected{% endif %}>Section {{ sc }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex gap-2">
+                <button type="submit" class="shadcn-btn shadcn-btn-primary h-9 px-4 text-sm">
+                    <i data-lucide="filter" class="h-3.5 w-3.5 mr-1.5"></i> Filter
+                </button>
+                <a href="{{ url_for('teacher.view_students') }}" class="shadcn-btn shadcn-btn-outline h-9 px-4 text-sm">
+                    <i data-lucide="x" class="h-3.5 w-3.5 mr-1.5"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Students Table -->
+    <div class="shadcn-card overflow-hidden">
+        <div class="p-0">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left align-middle">
+                    <thead class="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
                         <tr>
-                            <th>Student ID</th>
-                            <th>Name</th>
-                            <th>Department</th>
-                            <th>Semester</th>
-                            <th>Overall Attendance</th>
-                            <th>Status</th>
+                            <th class="px-6 py-4 font-medium">Student</th>
+                            <th class="px-6 py-4 font-medium">Student ID</th>
+                            <th class="px-6 py-4 font-medium">Department</th>
+                            <th class="px-6 py-4 font-medium">Sem / Sec</th>
+                            <th class="px-6 py-4 font-medium">Attendance</th>
+                            <th class="px-6 py-4 font-medium">Status</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="divide-y divide-border">
                         {% for item in student_data %}
-                        <tr>
-                            <td><strong>{{ item.student.student_id }}</strong></td>
-                            <td>{{ item.student.full_name }}</td>
-                            <td>{{ item.student.department }}</td>
-                            <td>{{ item.student.semester }}</td>
-                            <td>
-                                <div class="progress" style="height: 25px;">
-                                    <div class="progress-bar {% if item.stats['percentage'] >= 75 %}bg-success{% else %}bg-danger{% endif %}"
-                                        style="width: {{ item.stats['percentage'] }}%">
-                                        {{ item.stats['percentage'] }}%
+                        <tr class="hover:bg-muted/30 transition-colors">
+                            <!-- Student Name + Avatar -->
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="h-9 w-9 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                                        {{ item.student.full_name[:1].upper() }}
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-foreground">{{ item.student.full_name }}</div>
+                                        <div class="text-xs text-muted-foreground">{{ item.student.email }}</div>
                                     </div>
                                 </div>
                             </td>
-                            <td>
-                                {% if item.stats['percentage'] >= 75 %}
-                                <span class="badge bg-success">Good</span>
-                                {% else %}
-                                <span class="badge bg-danger">Low</span>
+                            <!-- Student ID -->
+                            <td class="px-6 py-4">
+                                <span class="font-mono text-xs bg-muted px-2 py-1 rounded">{{ item.student.student_id or '—' }}</span>
+                            </td>
+                            <!-- Department -->
+                            <td class="px-6 py-4 text-muted-foreground">{{ item.student.department or '—' }}</td>
+                            <!-- Semester / Section -->
+                            <td class="px-6 py-4">
+                                <span class="text-foreground">{{ item.student.semester or '—' }}</span>
+                                {% if item.student.section %}
+                                <span class="ml-1 text-xs font-medium bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">{{ item.student.section }}</span>
                                 {% endif %}
+                            </td>
+                            <!-- Attendance Bar -->
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3 min-w-[180px]">
+                                    <div class="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                                        <div class="h-full rounded-full transition-all duration-500
+                                            {% if item.stats.percentage >= 75 %}bg-green-500{% elif item.stats.percentage >= 50 %}bg-yellow-500{% else %}bg-red-500{% endif %}"
+                                            style="width: {{ item.stats.percentage }}%">
+                                        </div>
+                                    </div>
+                                    <span class="text-sm font-semibold tabular-nums w-12 text-right
+                                        {% if item.stats.percentage >= 75 %}text-green-600{% elif item.stats.percentage >= 50 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                                        {{ item.stats.percentage }}%
+                                    </span>
+                                </div>
+                                <div class="text-[10px] text-muted-foreground mt-1">
+                                    P: {{ item.stats.present }} &bull; A: {{ item.stats.absent }} &bull; L: {{ item.stats.late }} &bull; Total: {{ item.stats.total }}
+                                </div>
+                            </td>
+                            <!-- Status Badge -->
+                            <td class="px-6 py-4">
+                                {% if item.stats.percentage >= 75 %}
+                                <span class="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Good
+                                </span>
+                                {% elif item.stats.percentage >= 50 %}
+                                <span class="inline-flex items-center gap-1.5 rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-semibold text-yellow-700">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-yellow-500"></div> Warning
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div> Critical
+                                </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-16 text-center text-muted-foreground">
+                                <div class="flex flex-col items-center justify-center gap-3">
+                                    <div class="h-14 w-14 rounded-full bg-muted flex items-center justify-center">
+                                        <i data-lucide="users" class="h-7 w-7 opacity-40"></i>
+                                    </div>
+                                    <p class="text-sm">No students found matching the selected filters.</p>
+                                    <a href="{{ url_for('teacher.view_students') }}" class="text-xs text-primary hover:underline">Clear filters</a>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -52,5 +163,33 @@
             </div>
         </div>
     </div>
+
+    <!-- Summary Cards -->
+    {% if student_data %}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="shadcn-card p-4">
+            <div class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Students</div>
+            <div class="text-2xl font-bold text-foreground mt-1">{{ total_students }}</div>
+        </div>
+        <div class="shadcn-card p-4">
+            <div class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Good Attendance</div>
+            <div class="text-2xl font-bold text-green-600 mt-1">
+                {{ student_data | selectattr('stats.percentage', 'ge', 75) | list | length }}
+            </div>
+        </div>
+        <div class="shadcn-card p-4">
+            <div class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Warning</div>
+            <div class="text-2xl font-bold text-yellow-600 mt-1">
+                {{ student_data | selectattr('stats.percentage', 'lt', 75) | selectattr('stats.percentage', 'ge', 50) | list | length }}
+            </div>
+        </div>
+        <div class="shadcn-card p-4">
+            <div class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Critical (&lt;50%)</div>
+            <div class="text-2xl font-bold text-red-600 mt-1">
+                {{ student_data | selectattr('stats.percentage', 'lt', 50) | list | length }}
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

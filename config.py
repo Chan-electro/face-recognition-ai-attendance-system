@@ -1,6 +1,6 @@
 import os
 from datetime import timedelta
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # pyre-ignore[21]
 
 # Load environment variables from .env if it exists
 load_dotenv()
@@ -30,6 +30,7 @@ class Config:
     FACE_IMAGES_FOLDER = os.path.join(UPLOAD_FOLDER, 'face_images')
     AI_TRAINING_FOLDER = os.path.join(UPLOAD_FOLDER, 'ai_training')
     EXPORTS_FOLDER = os.path.join(UPLOAD_FOLDER, 'exports')
+    NOTES_FOLDER = os.path.join(UPLOAD_FOLDER, 'notes')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
     
     # AI Model settings

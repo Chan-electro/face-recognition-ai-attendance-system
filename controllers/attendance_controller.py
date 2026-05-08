@@ -1,8 +1,8 @@
-from flask import Blueprint, render_template, request, jsonify, session
-from utils.auth_utils import role_required
-from models.user import User
-from models.subject import Subject
-from services.attendance_service import AttendanceService
+from flask import Blueprint, render_template, request, jsonify, session  # pyre-ignore[21]
+from utils.auth_utils import role_required  # pyre-ignore[21]
+from models.user import User  # pyre-ignore[21]
+from models.subject import Subject  # pyre-ignore[21]
+from services.attendance_service import AttendanceService  # pyre-ignore[21]
 from datetime import datetime
 
 attendance_bp = Blueprint('attendance', __name__, url_prefix='/attendance')
@@ -25,8 +25,8 @@ def mark_attendance_face():
         image_data = data['image']
         
         # Initialize face service
-        from services.face_recognition_service import get_face_service
-        from flask import current_app
+        from services.face_recognition_service import get_face_service  # pyre-ignore[21]
+        from flask import current_app  # pyre-ignore[21]
         face_service = get_face_service(current_app.config)
         
         # Process image

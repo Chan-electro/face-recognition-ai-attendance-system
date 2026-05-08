@@ -10,7 +10,7 @@ def init_database(app):
     """Initialize database and create tables"""
     with app.app_context():
         db.create_all()
-        print("✓ Database tables created")
+        print("Database tables created")
 
 
 def seed_database(app):
@@ -83,7 +83,7 @@ def seed_database(app):
             db.session.add(student)
         
         db.session.commit()
-        print("✓ Users created")
+        print("Users created")
         
         # Create Faculty
         faculty_data = [
@@ -114,7 +114,7 @@ def seed_database(app):
             faculty_objects.append(faculty)
         
         db.session.commit()
-        print("✓ Faculty created")
+        print("Faculty created")
         
         # Create Subjects
         subjects_data = [
@@ -142,7 +142,7 @@ def seed_database(app):
             subject_objects.append(subject)
         
         db.session.commit()
-        print("✓ Subjects created")
+        print("Subjects created")
         
         # Create Timetable
         from datetime import time
@@ -188,7 +188,7 @@ def seed_database(app):
             db.session.add(entry)
         
         db.session.commit()
-        print("✓ Timetable created")
+        print("Timetable created")
         
         print("\n" + "="*50)
         print("Database seeded successfully!")

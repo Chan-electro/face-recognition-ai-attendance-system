@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Study Materials - Student{% endblock %}
+{% block content %}
+<div class="flex flex-col gap-6">
+    <div>
+        <h1 class="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <i data-lucide="book-open" class="h-8 w-8 text-primary"></i> Study Materials
+        </h1>
+        <p class="text-muted-foreground mt-1">Download notes and study materials uploaded by your teachers.</p>
+    </div>
+
+    <!-- Subject Filter -->
+    <div class="flex gap-2 p-1 bg-muted/50 rounded-lg w-fit flex-wrap">
+        <a href="{{ url_for('student.notes') }}"
+            class="px-3 py-2 rounded-md text-sm font-medium transition-colors {% if not selected_subject_id %}bg-background text-foreground shadow-sm{% else %}text-muted-foreground hover:bg-background/50{% endif %}">
+            All Subjects
+        </a>
+        {% for s in subjects %}
+        <a href="{{ url_for('student.notes', subject_id=s.id) }}"
+            class="px-3 py-2 rounded-md text-sm font-medium transition-colors {% if selected_subject_id == s.id %}bg-background text-foreground shadow-sm{% else %}text-muted-foreground hover:bg-background/50{% endif %}">
+            {{ s.code }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Notes Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for note in notes %}
+        <div class="shadcn-card p-5 hover:shadow-md transition-shadow">
+            <div class="flex items-start gap-3">
+                <div class="h-10 w-10 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <i data-lucide="file-text" class="h-5 w-5 text-primary"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="font-medium text-foreground truncate">{{ note.title }}</h3>
+                    <p class="text-xs text-muted-foreground mt-0.5">{{ note.subject.name if note.subject else 'General' }}</p>
+                    {% if note.description %}
+                    <p class="text-xs text-muted-foreground mt-1 line-clamp-2">{{ note.description }}</p>
+                    {% endif %}
+                    <div class="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
+                        <span class="flex items-center gap-1"><i data-lucide="user" class="h-3 w-3"></i> {{ note.uploader.full_name if note.uploader else 'Unknown' }}</span>
+                        <span>{{ "%.1f"|format(note.file_size / 1048576) if note.file_size else 0 }} MB</span>
+                        <span>{{ note.uploaded_at.strftime('%d %b') if note.uploaded_at else '' }}</span>
+                    </div>
+                </div>
+            </div>
+            <a href="{{ url_for('student.download_note', note_id=note.id) }}"
+                class="shadcn-btn shadcn-btn-outline w-full mt-4 h-9 text-sm">
+                <i data-lucide="download" class="mr-2 h-4 w-4"></i> Download
+            </a>
+        </div>
+        {% else %}
+        <div class="col-span-full shadcn-card p-12 text-center">
+            <i data-lucide="book-x" class="h-12 w-12 mx-auto text-muted-foreground/40 mb-3"></i>
+            <p class="text-muted-foreground">No study materials available yet.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -3,56 +3,96 @@
 {% block title %}Subjects{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h2 class="mb-4">
-        <i class="material-icons align-middle">book</i>
-        Subjects & Faculty
-    </h2>
+<div class="flex flex-col gap-6">
+    <div class="flex justify-between items-center flex-wrap gap-4">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                <i data-lucide="book" class="h-8 w-8 text-primary"></i>
+                My Subjects
+            </h1>
+            <p class="text-muted-foreground mt-1">View your registered subjects, assigned faculty, and attendance standing.</p>
+        </div>
+    </div>
 
-    <div class="row">
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for subject in subjects %}
-        <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">{{ subject.code }}</h5>
-                </div>
-                <div class="card-body">
-                    <h6 class="card-title">{{ subject.name }}</h6>
-                    <p class="card-text text-muted">{{ subject.description }}</p>
-
-                    <hr>
-
-                    <p class="mb-1">
-                        <strong><i class="material-icons align-middle">person</i> Faculty:</strong>
-                        {% if subject.faculty %}
-                        {{ subject.faculty.name }}
-                        {% else %}
-                        Not assigned
-                        {% endif %}
-                    </p>
-
-                    <p class="mb-1">
-                        <strong><i class="material-icons align-middle">stars</i> Credits:</strong>
-                        {{ subject.credits }}
-                    </p>
-
-                    {% if subject.id in attendance_map %}
-                    <hr>
-                    <p class="mb-1">
-                        <strong><i class="material-icons align-middle">event_available</i> Your Attendance:</strong>
-                        <span
-                            class="badge {% if attendance_map[subject.id]['percentage'] >= 75 %}bg-success{% else %}bg-danger{% endif %}">
-                            {{ attendance_map[subject.id]['percentage'] }}%
+        <div class="shadcn-card flex flex-col hover:shadow-md transition-shadow">
+            <!-- Header -->
+            <div class="p-6 border-b border-border bg-gradient-to-r from-primary/10 to-transparent">
+                <div class="flex justify-between items-start gap-4">
+                    <div>
+                        <span class="inline-flex items-center rounded-md bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary mb-2 font-mono">
+                            {{ subject.code }}
                         </span>
-                    </p>
-                    <p class="mb-0 small">
-                        Present: {{ attendance_map[subject.id]['present'] }} |
-                        Absent: {{ attendance_map[subject.id]['absent'] }} |
-                        Late: {{ attendance_map[subject.id]['late'] }}
-                    </p>
-                    {% endif %}
+                        <h3 class="font-semibold leading-tight tracking-tight text-lg line-clamp-2">{{ subject.name }}</h3>
+                    </div>
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-background border border-border shadow-sm text-primary font-bold">
+                        {{ subject.credits }}
+                    </div>
                 </div>
             </div>
+            
+            <!-- Body -->
+            <div class="p-6 flex-1 flex flex-col gap-4">
+                {% if subject.description %}
+                <p class="text-sm text-muted-foreground line-clamp-2">{{ subject.description }}</p>
+                {% endif %}
+
+                <div class="flex items-center gap-3 py-2">
+                    <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 shrink-0">
+                        <i data-lucide="user" class="h-4 w-4"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Faculty</span>
+                        <span class="text-sm font-medium text-foreground">
+                            {% if subject.faculty %}
+                            {{ subject.faculty.name }}
+                            {% else %}
+                            <span class="italic text-muted-foreground">Not assigned</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                {% if subject.id in attendance_map %}
+                {% set stats = attendance_map[subject.id] %}
+                <div class="mt-auto pt-4 border-t border-border">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
+                            <i data-lucide="activity" class="h-4 w-4"></i> Attendance
+                        </span>
+                        <span class="text-sm font-bold {% if stats.percentage >= 75 %}text-green-600{% else %}text-red-600{% endif %}">
+                            {{ stats.percentage }}%
+                        </span>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="h-2 w-full bg-muted rounded-full overflow-hidden mb-3">
+                        <div class="h-full rounded-full transition-all duration-1000 ease-out {% if stats.percentage >= 75 %}bg-green-500{% elif stats.percentage >= 50 %}bg-yellow-500{% else %}bg-red-500{% endif %}"
+                             style="width: {{ stats.percentage }}%"></div>
+                    </div>
+                    
+                    <!-- Breakdown -->
+                    <div class="flex justify-between text-xs text-muted-foreground">
+                        <span title="Present" class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-green-500"></div> {{ stats.present }}</span>
+                        <span title="Late" class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-yellow-500"></div> {{ stats.late }}</span>
+                        <span title="Absent" class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-red-500"></div> {{ stats.absent }}</span>
+                    </div>
+                </div>
+                {% else %}
+                <div class="mt-auto pt-4 border-t border-border flex items-center justify-center p-4 bg-muted/30 rounded-md">
+                    <span class="text-sm text-muted-foreground">No attendance records yet</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="md:col-span-2 lg:col-span-3 shadcn-card p-12 flex flex-col items-center justify-center text-center">
+            <div class="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                <i data-lucide="book-x" class="h-8 w-8 text-muted-foreground"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-foreground">No Subjects Found</h3>
+            <p class="text-sm text-muted-foreground mt-1 max-w-md">You are not currently registered for any subjects in this semester. Please contact administration.</p>
         </div>
         {% endfor %}
     </div>

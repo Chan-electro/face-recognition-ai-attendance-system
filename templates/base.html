@@ -109,6 +109,9 @@
                     <a href="{{ url_for('student.timetable') }}"
                         class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
                             data-lucide="clock" class="h-4 w-4"></i> Timetable</a>
+                    <a href="{{ url_for('student.notes') }}"
+                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
+                            data-lucide="book-open" class="h-4 w-4"></i> Notes</a>
                     {% elif session.role == 'TEACHER' %}
                     <a href="{{ url_for('teacher.dashboard') }}"
                         class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
@@ -119,9 +122,12 @@
                     <a href="{{ url_for('teacher.view_students') }}"
                         class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
                             data-lucide="users" class="h-4 w-4"></i> Students</a>
-                    <a href="{{ url_for('teacher.manage_faces') }}"
+                    <a href="{{ url_for('teacher.notes_page') }}"
                         class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
-                            data-lucide="user-square" class="h-4 w-4"></i> Manage Faces</a>
+                            data-lucide="book-open" class="h-4 w-4"></i> Notes</a>
+                    <a href="{{ url_for('teacher.upload_attendance_page') }}"
+                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
+                            data-lucide="upload" class="h-4 w-4"></i> Upload</a>
                     {% elif session.role == 'ADMIN' %}
                     <a href="{{ url_for('admin.dashboard') }}"
                         class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
@@ -135,6 +141,9 @@
                     <a href="{{ url_for('admin.ai_training') }}"
                         class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
                             data-lucide="brain" class="h-4 w-4"></i> AI Training</a>
+                    <a href="{{ url_for('admin.upload_excel_page') }}"
+                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
+                            data-lucide="upload" class="h-4 w-4"></i> Upload Data</a>
                     {% endif %}
                 </nav>
             </div>
@@ -185,6 +194,8 @@
                         data-lucide="bot" class="h-4 w-4"></i> AI Assistant</a>
                 <a href="{{ url_for('student.timetable') }}" class="flex items-center gap-2 text-foreground/70"><i
                         data-lucide="clock" class="h-4 w-4"></i> Timetable</a>
+                <a href="{{ url_for('student.notes') }}" class="flex items-center gap-2 text-foreground/70"><i
+                        data-lucide="book-open" class="h-4 w-4"></i> Notes</a>
                 {% elif session.role == 'TEACHER' %}
                 <a href="{{ url_for('teacher.dashboard') }}" class="flex items-center gap-2 text-foreground/70"><i
                         data-lucide="layout-dashboard" class="h-4 w-4"></i> Dashboard</a>
@@ -193,8 +204,10 @@
                     Attendance</a>
                 <a href="{{ url_for('teacher.view_students') }}" class="flex items-center gap-2 text-foreground/70"><i
                         data-lucide="users" class="h-4 w-4"></i> Students</a>
-                <a href="{{ url_for('teacher.manage_faces') }}" class="flex items-center gap-2 text-foreground/70"><i
-                        data-lucide="user-square" class="h-4 w-4"></i> Manage Faces</a>
+                <a href="{{ url_for('teacher.notes_page') }}" class="flex items-center gap-2 text-foreground/70"><i
+                        data-lucide="book-open" class="h-4 w-4"></i> Notes</a>
+                <a href="{{ url_for('teacher.upload_attendance_page') }}" class="flex items-center gap-2 text-foreground/70"><i
+                        data-lucide="upload" class="h-4 w-4"></i> Upload</a>
                 {% elif session.role == 'ADMIN' %}
                 <a href="{{ url_for('admin.dashboard') }}" class="flex items-center gap-2 text-foreground/70"><i
                         data-lucide="layout-dashboard" class="h-4 w-4"></i> Dashboard</a>
@@ -204,6 +217,8 @@
                         data-lucide="clock" class="h-4 w-4"></i> Timetable</a>
                 <a href="{{ url_for('admin.ai_training') }}" class="flex items-center gap-2 text-foreground/70"><i
                         data-lucide="brain" class="h-4 w-4"></i> AI Training</a>
+                <a href="{{ url_for('admin.upload_excel_page') }}" class="flex items-center gap-2 text-foreground/70"><i
+                        data-lucide="upload" class="h-4 w-4"></i> Upload Data</a>
                 {% endif %}
             </nav>
         </div>

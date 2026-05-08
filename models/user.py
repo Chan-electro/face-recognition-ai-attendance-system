@@ -17,6 +17,7 @@ class User(db.Model):
     student_id = db.Column(db.String(20), unique=True, nullable=True)  # For students only
     department = db.Column(db.String(100), nullable=True)
     semester = db.Column(db.Integer, nullable=True)  # For students
+    section = db.Column(db.String(10), nullable=True)  # For students (A, B, C, etc.)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)
@@ -51,6 +52,7 @@ class User(db.Model):
             'student_id': self.student_id,
             'department': self.department,
             'semester': self.semester,
+            'section': self.section,
             'is_active': self.is_active,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }

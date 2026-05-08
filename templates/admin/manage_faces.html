@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Manage Student Faces - Admin{% endblock %}
+{% block title %}Manage User Faces - Admin{% endblock %}
 
 {% block content %}
 <div class="flex flex-col gap-6">
     <div>
         <h1 class="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <i data-lucide="scan-face" class="h-8 w-8 text-primary"></i>
-            Manage Student Faces
+            Manage User Faces
         </h1>
         <p class="text-muted-foreground mt-1">Register and manage facial encodings for the Face Recognition Login
             system.</p>
@@ -18,8 +18,8 @@
         <div class="shadcn-card">
             <div class="p-6 flex flex-row items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-muted-foreground">Total Students</p>
-                    <h3 class="text-2xl font-bold mt-1">{{ student_faces|length }}</h3>
+                    <p class="text-sm font-medium text-muted-foreground">Total Users</p>
+                    <h3 class="text-2xl font-bold mt-1">{{ user_faces|length }}</h3>
                 </div>
                 <div class="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
                     <i data-lucide="users" class="h-5 w-5"></i>
@@ -27,7 +27,7 @@
             </div>
         </div>
 
-        {% set registered_count = student_faces|selectattr('has_encoding')|list|length %}
+        {% set registered_count = user_faces|selectattr('has_encoding')|list|length %}
         <div class="shadcn-card">
             <div class="p-6 flex flex-row items-center justify-between">
                 <div>
@@ -40,7 +40,7 @@
             </div>
         </div>
 
-        {% set unregistered_count = student_faces|length - registered_count %}
+        {% set unregistered_count = user_faces|length - registered_count %}
         <div class="shadcn-card">
             <div class="p-6 flex flex-row items-center justify-between">
                 <div>
@@ -64,7 +64,7 @@
 
             <div class="relative w-64 hidden sm:block">
                 <i data-lucide="search" class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"></i>
-                <input type="text" id="searchInput" placeholder="Search students..."
+                <input type="text" id="searchInput" placeholder="Search users..."
                     class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 pl-8">
             </div>
         </div>
@@ -73,22 +73,29 @@
                 <table class="w-full text-sm text-left align-middle" id="facesTable">
                     <thead class="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
                         <tr>
-                            <th class="px-6 py-4 font-medium w-32">Student ID</th>
-                            <th class="px-6 py-4 font-medium">Student Info</th>
+                            <th class="px-6 py-4 font-medium w-32">Identifier</th>
+                            <th class="px-6 py-4 font-medium">User Info</th>
                             <th class="px-6 py-4 font-medium">Registration Status</th>
                             <th class="px-6 py-4 font-medium hidden sm:table-cell">Encodings</th>
                             <th class="px-6 py-4 font-medium text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-border">
-                        {% for item in student_faces %}
+                        {% for item in user_faces %}
                         <tr class="hover:bg-muted/30 transition-colors search-row">
                             <td class="px-6 py-4 whitespace-nowrap text-foreground font-medium">
-                                {{ item.student.student_id or item.student.id }}
+                                {% if item.user.role == 'STUDENT' %}
+                                <span class="text-xs text-muted-foreground mr-1">ID:</span>{{ item.user.student_id or
+                                item.user.id }}
+                                {% else %}
+                                <span
+                                    class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700 uppercase">{{
+                                    item.user.role }}</span>
+                                {% endif %}
                             </td>
                             <td class="px-6 py-4">
-                                <div class="font-medium text-foreground search-name">{{ item.student.full_name }}</div>
-                                <div class="text-xs text-muted-foreground search-email">{{ item.student.email }}</div>
+                                <div class="font-medium text-foreground search-name">{{ item.user.full_name }}</div>
+                                <div class="text-xs text-muted-foreground search-email">{{ item.user.email }}</div>
                             </td>
                             <td class="px-6 py-4">
                                 {% if item.has_encoding %}
@@ -111,8 +118,7 @@
                             <td class="px-6 py-4 text-right">
                                 <button
                                     class="shadcn-btn {% if item.has_encoding %}shadcn-btn-outline{% else %}shadcn-btn-primary{% endif %} h-8 text-xs open-camera-btn"
-                                    data-student-id="{{ item.student.id }}"
-                                    data-student-name="{{ item.student.full_name }}">
+                                    data-student-id="{{ item.user.id }}" data-student-name="{{ item.user.full_name }}">
                                     <i data-lucide="camera" class="mr-1.5 h-3.5 w-3.5"></i>
                                     {% if item.has_encoding %}Update{% else %}Register{% endif %} Face
                                 </button>
@@ -139,7 +145,7 @@
                 Register Face Profile
             </h2>
             <p class="text-sm text-muted-foreground flex items-center gap-1">
-                For student: <strong id="student-name-display" class="text-foreground"></strong>
+                For user: <strong id="student-name-display" class="text-foreground"></strong>
             </p>
         </div>
 
@@ -206,7 +212,7 @@
             <div id="status-message"
                 class="mt-4 flex p-3 rounded-md bg-muted/50 text-sm text-muted-foreground items-center gap-2">
                 <i data-lucide="info" class="h-4 w-4 text-sky-500"></i>
-                <span>Position the student's face clearly within the frame.</span>
+                <span>Position the user's face clearly within the frame.</span>
             </div>
 
         </div>
@@ -337,7 +343,7 @@
                     captureBtn.disabled = false;
                 };
 
-                updateStatus('info', 'text-sky-500', 'Position the student\'s face clearly within the frame.');
+                updateStatus('info', 'text-sky-500', 'Position the user\'s face clearly within the frame.');
 
             } catch (err) {
                 console.error("Error accessing camera: ", err);
@@ -391,7 +397,7 @@
             cameraControls.classList.remove('hidden');
             previewControls.classList.add('hidden');
 
-            updateStatus('info', 'text-sky-500', 'Position the student\'s face clearly within the frame.');
+            updateStatus('info', 'text-sky-500', 'Position the user\'s face clearly within the frame.');
         });
 
         // Save Face

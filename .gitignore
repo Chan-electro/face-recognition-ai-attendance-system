@@ -44,3 +44,10 @@ instance/
 ai_data/
 ai_models/
 model_data/
+
+# Data and Uploads
+data/uploads/
+database/*.db
+
+# System files
+.DS_Store

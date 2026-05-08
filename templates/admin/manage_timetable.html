@@ -3,102 +3,150 @@
 {% block title %}Manage Timetable{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <h2 class="mb-4">
-        <i class="material-icons align-middle">schedule</i>
-        Timetable Management
-    </h2>
-
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Add Timetable Entry</h5>
-        </div>
-        <div class="card-body">
-            <form method="POST" action="{{ url_for('admin.add_timetable_entry') }}">
-                <div class="row">
-                    <div class="col-md-3">
-                        <label class="form-label">Subject</label>
-                        <select class="form-select" name="subject_id" required>
-                            {% for subject in subjects %}
-                            <option value="{{ subject.id }}">{{ subject.code }} - {{ subject.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Day</label>
-                        <select class="form-select" name="day_of_week" required>
-                            <option value="MONDAY">Monday</option>
-                            <option value="TUESDAY">Tuesday</option>
-                            <option value="WEDNESDAY">Wednesday</option>
-                            <option value="THURSDAY">Thursday</option>
-                            <option value="FRIDAY">Friday</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Start Time</label>
-                        <input type="time" class="form-control" name="start_time" required>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">End Time</label>
-                        <input type="time" class="form-control" name="end_time" required>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Room</label>
-                        <input type="text" class="form-control" name="room" required>
-                    </div>
-                    <div class="col-md-1 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100">Add</button>
-                    </div>
-                </div>
-            </form>
+<div class="flex flex-col gap-6">
+    <div class="flex justify-between items-center flex-wrap gap-4">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                <i data-lucide="calendar-days" class="h-8 w-8 text-primary"></i>
+                Timetable Management
+            </h1>
+            <p class="text-muted-foreground mt-1">Configure the weekly class schedule and room assignments.</p>
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header bg-secondary text-white">
-            <h5 class="mb-0">Weekly Schedule</h5>
+    <!-- Add Timetable Entry Form -->
+    <div class="shadcn-card p-6">
+        <div class="flex items-center gap-2 mb-4">
+            <i data-lucide="calendar-plus" class="h-5 w-5 text-primary"></i>
+            <h3 class="text-lg font-semibold leading-none tracking-tight">Add Schedule Entry</h3>
         </div>
-        <div class="card-body">
-            {% for day in days %}
-            <h5 class="mt-3">{{ day.capitalize() }}</h5>
-            {% if schedule[day] %}
-            <div class="table-responsive">
-                <table class="table table-sm table-bordered">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Time</th>
-                            <th>Subject</th>
-                            <th>Room</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for entry in schedule[day] %}
-                        <tr>
-                            <td>{{ entry.start_time.strftime('%H:%M') }} - {{ entry.end_time.strftime('%H:%M') }}</td>
-                            <td>{{ entry.subject.code }} - {{ entry.subject.name }}</td>
-                            <td>{{ entry.room }}</td>
-                            <td>
-                                <button class="btn btn-sm btn-danger" onclick="deleteEntry({{ entry.id }})">
-                                    <i class="material-icons" style="font-size: 14px;">delete</i>
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        
+        <form method="POST" action="{{ url_for('admin.add_timetable_entry') }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
+            <div class="lg:col-span-2 grid gap-2 w-full">
+                <label class="text-sm font-medium leading-none">Subject</label>
+                <select class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" name="subject_id" required>
+                    <option value="" disabled selected>Select subject...</option>
+                    {% for subject in subjects %}
+                    <option value="{{ subject.id }}">{{ subject.code }} - {{ subject.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            {% else %}
-            <p class="text-muted">No classes</p>
-            {% endif %}
-            {% endfor %}
+            
+            <div class="grid gap-2 w-full">
+                <label class="text-sm font-medium leading-none">Day</label>
+                <select class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" name="day_of_week" required>
+                    <option value="MONDAY">Monday</option>
+                    <option value="TUESDAY">Tuesday</option>
+                    <option value="WEDNESDAY">Wednesday</option>
+                    <option value="THURSDAY">Thursday</option>
+                    <option value="FRIDAY">Friday</option>
+                </select>
+            </div>
+            
+            <div class="grid gap-2 w-full">
+                <label class="text-sm font-medium leading-none">Start Time</label>
+                <input type="time" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" name="start_time" required>
+            </div>
+            
+            <div class="grid gap-2 w-full">
+                <label class="text-sm font-medium leading-none">End Time</label>
+                <input type="time" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" name="end_time" required>
+            </div>
+            
+            <div class="grid gap-2 w-full">
+                <label class="text-sm font-medium leading-none">Room</label>
+                <input type="text" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" name="room" placeholder="e.g. 101" required>
+            </div>
+            
+            <div class="lg:col-span-6 flex justify-end mt-2">
+                <button type="submit" class="shadcn-btn shadcn-btn-primary px-8">
+                    <i data-lucide="plus" class="mr-2 h-4 w-4"></i> Add Entry
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Weekly Schedule -->
+    <div class="grid gap-6">
+        {% for day in days %}
+        {% if schedule[day] %}
+        <div class="shadcn-card overflow-hidden">
+            <div class="p-4 border-b border-border bg-muted/20">
+                <h5 class="font-semibold text-primary flex items-center gap-2">
+                    <i data-lucide="calendar" class="h-4 w-4"></i>
+                    {{ day.capitalize() }}
+                </h5>
+            </div>
+            <div class="p-0">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left align-middle">
+                        <thead class="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
+                            <tr>
+                                <th class="px-6 py-3 font-medium w-48">Time Slot</th>
+                                <th class="px-6 py-3 font-medium">Subject</th>
+                                <th class="px-6 py-3 font-medium w-32">Room</th>
+                                <th class="px-6 py-3 font-medium text-right w-24">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-border">
+                            {% for entry in schedule[day] %}
+                            <tr class="hover:bg-muted/30 transition-colors">
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center rounded-md bg-blue-50 px-2.5 py-1 text-sm font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 whitespace-nowrap">
+                                        <i data-lucide="clock" class="mr-1.5 h-3.5 w-3.5"></i>
+                                        {{ entry.start_time.strftime('%H:%M') }} - {{ entry.end_time.strftime('%H:%M') }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="font-medium text-foreground">{{ entry.subject.name }}</div>
+                                    <div class="text-xs text-muted-foreground font-mono">{{ entry.subject.code }}</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="flex items-center text-muted-foreground">
+                                        <i data-lucide="door-open" class="mr-1.5 h-4 w-4"></i>
+                                        {{ entry.room }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button class="shadcn-btn shadcn-btn-outline h-8 w-8 p-0 text-destructive hover:bg-destructive hover:text-destructive-foreground" 
+                                            onclick="deleteEntry({{ entry.id }})" title="Delete entry">
+                                        <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                        <span class="sr-only">Delete</span>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
+        {% endif %}
+        {% endfor %}
+        
+        {% set has_classes = false %}
+        {% for day in days %}
+            {% if schedule[day] %}{% set has_classes = true %}{% endif %}
+        {% endfor %}
+        
+        {% if not has_classes %}
+        <div class="shadcn-card p-12 flex flex-col items-center justify-center text-center">
+            <div class="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                <i data-lucide="calendar-x" class="h-8 w-8 text-muted-foreground"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-foreground">No Classes Scheduled</h3>
+            <p class="text-sm text-muted-foreground mt-1 max-w-sm">The timetable is currently empty. Use the form above to add class entries.</p>
+        </div>
+        {% endif %}
     </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
 <script>
     async function deleteEntry(entryId) {
-        if (!confirm('Delete this timetable entry?')) return;
+        if (!confirm('Are you sure you want to delete this timetable entry?')) return;
 
         try {
             const response = await fetch(`/admin/timetable/${entryId}/delete`, { method: 'POST' });
@@ -111,7 +159,7 @@
                 showToast(result.message, 'danger');
             }
         } catch (error) {
-            showToast('Error occurred', 'danger');
+            showToast('A network error occurred while deleting the entry', 'danger');
         }
     }
 </script>

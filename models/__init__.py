@@ -9,3 +9,5 @@ from models.face_encoding import FaceEncoding
 from models.subject import Subject
 from models.faculty import Faculty
 from models.timetable import Timetable
+from models.internal_mark import InternalMark
+from models.note import Note

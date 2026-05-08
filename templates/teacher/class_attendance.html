@@ -3,85 +3,89 @@
 {% block title %}Class Attendance{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h2 class="mb-4">
-        <i class="material-icons align-middle">list_alt</i>
-        Class Attendance Report
-    </h2>
-
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Filter</h5>
-        </div>
-        <div class="card-body">
-            <form method="GET">
-                <div class="row">
-                    <div class="col-md-5">
-                        <label for="subject_id" class="form-label">Subject</label>
-                        <select class="form-select" name="subject_id" id="subject_id">
-                            <option value="">Select Subject</option>
-                            {% for subject in subjects %}
-                            <option value="{{ subject.id }}" {% if selected_subject and selected_subject.id==subject.id
-                                %}selected{% endif %}>
-                                {{ subject.code }} - {{ subject.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-5">
-                        <label for="date" class="form-label">Date</label>
-                        <input type="date" class="form-control" name="date" id="date" value="{{ attendance_date }}">
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="material-icons align-middle">search</i> View
-                        </button>
-                    </div>
-                </div>
-            </form>
+<div class="flex flex-col gap-6">
+    <div class="flex justify-between items-center flex-wrap gap-4">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                <i data-lucide="list-checks" class="h-8 w-8 text-primary"></i>
+                Class Attendance Report
+            </h1>
+            <p class="text-muted-foreground mt-1">View and download attendance records for your classes.</p>
         </div>
     </div>
 
+    <!-- Filter Form -->
+    <div class="shadcn-card p-4">
+        <form method="GET" class="flex flex-col sm:flex-row gap-4 items-end">
+            <div class="grid gap-2 w-full sm:max-w-xs">
+                <label for="subject_id" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Subject</label>
+                <select class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" name="subject_id" id="subject_id">
+                    <option value="">Select Subject</option>
+                    {% for subject in subjects %}
+                    <option value="{{ subject.id }}" {% if selected_subject and selected_subject.id == subject.id %}selected{% endif %}>
+                        {{ subject.code }} - {{ subject.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="grid gap-2 w-full sm:max-w-[200px]">
+                <label for="date" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Date</label>
+                <input type="date" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" name="date" id="date" value="{{ attendance_date }}">
+            </div>
+
+            <button type="submit" class="shadcn-btn shadcn-btn-primary h-10 w-full sm:w-auto mt-4 sm:mt-0 px-8">
+                <i data-lucide="search" class="mr-2 h-4 w-4"></i> View Report
+            </button>
+        </form>
+    </div>
+
     {% if selected_subject %}
-    <div class="card">
-        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">{{ selected_subject.name }} - {{ attendance_date }}</h5>
+    <div class="shadcn-card overflow-hidden flex flex-col">
+        <!-- Card Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-6 border-b border-border bg-muted/20 gap-4">
+            <div>
+                <h3 class="text-lg font-semibold leading-none tracking-tight">{{ selected_subject.name }}</h3>
+                <p class="text-sm text-muted-foreground mt-1">{{ attendance_date }}</p>
+            </div>
             <a href="{{ url_for('teacher.download_report', subject_id=selected_subject.id, date=attendance_date) }}"
-                class="btn btn-light btn-sm">
-                <i class="material-icons align-middle">download</i> Download CSV
+                class="shadcn-btn shadcn-btn-outline whitespace-nowrap">
+                <i data-lucide="download" class="mr-2 h-4 w-4"></i> Download CSV
             </a>
         </div>
-        <div class="card-body p-0">
+
+        <!-- Table Content -->
+        <div class="p-0">
             {% if records %}
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                    <thead class="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
                         <tr>
-                            <th>Student ID</th>
-                            <th>Name</th>
-                            <th>Status</th>
-                            <th>Marked At</th>
-                            <th>Confidence</th>
+                            <th class="px-6 py-3 font-medium">Student ID</th>
+                            <th class="px-6 py-3 font-medium">Name</th>
+                            <th class="px-6 py-3 font-medium">Status</th>
+                            <th class="px-6 py-3 font-medium">Marked At</th>
+                            <th class="px-6 py-3 font-medium text-right">Confidence</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="divide-y divide-border">
                         {% for record in records %}
-                        <tr>
-                            <td><strong>{{ record.student_code }}</strong></td>
-                            <td>{{ record.student_name }}</td>
-                            <td>
+                        <tr class="hover:bg-muted/30 transition-colors">
+                            <td class="px-6 py-4 font-medium font-mono text-foreground">{{ record.student_code }}</td>
+                            <td class="px-6 py-4 text-foreground">{{ record.student_name }}</td>
+                            <td class="px-6 py-4">
                                 {% if record.status == 'PRESENT' %}
-                                <span class="badge bg-success">PRESENT</span>
+                                <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">PRESENT</span>
                                 {% elif record.status == 'LATE' %}
-                                <span class="badge bg-warning">LATE</span>
+                                <span class="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-semibold text-yellow-700">LATE</span>
                                 {% elif record.status == 'ABSENT' %}
-                                <span class="badge bg-danger">ABSENT</span>
+                                <span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">ABSENT</span>
                                 {% else %}
-                                <span class="badge bg-secondary">NOT MARKED</span>
+                                <span class="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">NOT MARKED</span>
                                 {% endif %}
                             </td>
-                            <td>{{ record.marked_at if record.marked_at else 'N/A' }}</td>
-                            <td>
+                            <td class="px-6 py-4 text-muted-foreground">{{ record.marked_at if record.marked_at else 'N/A' }}</td>
+                            <td class="px-6 py-4 text-right text-muted-foreground">
                                 {% if record.confidence %}
                                 {{ (record.confidence * 100)|round(2) }}%
                                 {% else %}
@@ -94,9 +98,12 @@
                 </table>
             </div>
             {% else %}
-            <div class="empty-state">
-                <i class="material-icons">event_busy</i>
-                <p>No attendance records found for this date</p>
+            <div class="flex flex-col items-center justify-center p-12 text-center">
+                <div class="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4">
+                    <i data-lucide="calendar-x" class="h-6 w-6 text-muted-foreground"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-foreground">No Records Found</h3>
+                <p class="text-sm text-muted-foreground max-w-sm mt-1">There are no attendance records for this subject on the selected date.</p>
             </div>
             {% endif %}
         </div>

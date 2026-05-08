@@ -45,9 +45,9 @@ class FaceRecognitionService:
             for enc in encodings:
                 self.known_encodings[enc.user_id] = enc.get_encoding()
             
-            print(f"✓ Loaded {len(self.known_encodings)} face encodings into cache")
+            print(f"Loaded {len(self.known_encodings)} face encodings into cache")
         except Exception as e:
-            print(f"⚠ Error loading face encodings: {e}")
+            print(f"Error loading face encodings: {e}")
             self.known_encodings = {}
     
     def detect_faces(self, image):
@@ -200,7 +200,7 @@ class FaceRecognitionService:
             if is_primary:
                 self.known_encodings[user_id] = encoding
             
-            print(f"✓ Face encoding saved for user {user_id}")
+            print(f"Face encoding saved for user {user_id}")
             return face_enc
             
         except Exception as e:

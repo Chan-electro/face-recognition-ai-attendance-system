@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Notes Management - Teacher{% endblock %}
+{% block content %}
+<div class="flex flex-col gap-6">
+    <div class="flex justify-between items-center flex-wrap gap-4">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                <i data-lucide="book-open" class="h-8 w-8 text-primary"></i> Study Materials
+            </h1>
+            <p class="text-muted-foreground mt-1">Upload and manage notes for your students.</p>
+        </div>
+        <button onclick="document.getElementById('uploadModal').classList.remove('hidden')" class="shadcn-btn shadcn-btn-primary">
+            <i data-lucide="plus" class="mr-2 h-4 w-4"></i> Upload Note
+        </button>
+    </div>
+
+    <!-- Notes List -->
+    <div class="shadcn-card overflow-hidden">
+        <div class="p-0">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                    <thead class="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
+                        <tr>
+                            <th class="px-6 py-4 font-medium">Title</th>
+                            <th class="px-6 py-4 font-medium">Subject</th>
+                            <th class="px-6 py-4 font-medium">Size</th>
+                            <th class="px-6 py-4 font-medium">Uploaded</th>
+                            <th class="px-6 py-4 font-medium text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-border">
+                        {% for note in notes %}
+                        <tr class="hover:bg-muted/30 transition-colors">
+                            <td class="px-6 py-4">
+                                <div class="font-medium text-foreground">{{ note.title }}</div>
+                                {% if note.description %}<div class="text-xs text-muted-foreground">{{ note.description[:80] }}</div>{% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-muted-foreground">{{ note.subject.name if note.subject else 'N/A' }}</td>
+                            <td class="px-6 py-4 text-muted-foreground">{{ "%.2f"|format(note.file_size / 1048576) if note.file_size else 0 }} MB</td>
+                            <td class="px-6 py-4 text-muted-foreground">{{ note.uploaded_at.strftime('%d %b %Y') if note.uploaded_at else 'N/A' }}</td>
+                            <td class="px-6 py-4 text-right">
+                                <button onclick="deleteNote({{ note.id }})" class="shadcn-btn shadcn-btn-outline h-8 w-8 p-0 text-destructive hover:bg-destructive/10 border-destructive/20" title="Delete">
+                                    <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="px-6 py-12 text-center text-muted-foreground">No notes uploaded yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Modal -->
+<div id="uploadModal" class="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm hidden">
+    <div class="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg sm:rounded-lg">
+        <div class="flex flex-col space-y-1.5">
+            <h2 class="text-lg font-semibold leading-none tracking-tight flex items-center gap-2">
+                <i data-lucide="file-plus" class="h-5 w-5 text-primary"></i> Upload Study Material
+            </h2>
+        </div>
+        <button type="button" onclick="document.getElementById('uploadModal').classList.add('hidden')"
+            class="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100">
+            <i data-lucide="x" class="h-4 w-4"></i>
+        </button>
+        <form id="noteForm" enctype="multipart/form-data" class="space-y-4 mt-2">
+            <div class="grid gap-2">
+                <label class="text-sm font-medium">Title *</label>
+                <input type="text" name="title" required class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            </div>
+            <div class="grid gap-2">
+                <label class="text-sm font-medium">Subject *</label>
+                <select name="subject_id" required class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    {% for s in subjects %}<option value="{{ s.id }}">{{ s.name }} ({{ s.code }})</option>{% endfor %}
+                </select>
+            </div>
+            <div class="grid gap-2">
+                <label class="text-sm font-medium">Description</label>
+                <textarea name="description" rows="2" class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"></textarea>
+            </div>
+            <div class="grid gap-2">
+                <label class="text-sm font-medium">File *</label>
+                <input type="file" name="file" required class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="document.getElementById('uploadModal').classList.add('hidden')" class="shadcn-btn shadcn-btn-outline">Cancel</button>
+                <button type="submit" id="noteSubmitBtn" class="shadcn-btn shadcn-btn-primary">
+                    <i data-lucide="upload" class="mr-2 h-4 w-4"></i> Upload
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.getElementById('noteForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('noteSubmitBtn');
+    btn.disabled = true;
+    const formData = new FormData(this);
+    try {
+        const resp = await fetch('{{ url_for("teacher.upload_note") }}', {method:'POST', body:formData});
+        const result = await resp.json();
+        if (result.success) {
+            showToast(result.message, 'success');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showToast(result.message, 'danger');
+        }
+    } catch(err) { showToast('Error: ' + err.message, 'danger'); }
+    btn.disabled = false;
+});
+async function deleteNote(id) {
+    if (!confirm('Delete this note?')) return;
+    try {
+        const resp = await fetch('/teacher/notes/' + id + '/delete', {method:'POST'});
+        const result = await resp.json();
+        if (result.success) { showToast(result.message, 'success'); setTimeout(() => window.location.reload(), 1000); }
+        else { showToast(result.message, 'danger'); }
+    } catch(err) { showToast('Error', 'danger'); }
+}
+</script>
+{% endblock %}

@@ -44,6 +44,31 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Quick Action Buttons -->
+            <div id="quickActions" class="flex flex-wrap gap-2 px-2">
+                <button onclick="askQuick('What is my overall attendance percentage?')"
+                    class="text-xs px-3 py-1.5 rounded-full border border-border bg-card hover:bg-accent transition-colors text-muted-foreground hover:text-foreground">
+                    📊 My Attendance
+                </button>
+                <button onclick="askQuick('Suggest important questions for Data Structures exam')"
+                    class="text-xs px-3 py-1.5 rounded-full border border-border bg-card hover:bg-accent transition-colors text-muted-foreground hover:text-foreground">
+                    📝 Exam Questions
+                </button>
+                <button onclick="askQuick('List students whose attendance is below 75%')"
+                    class="text-xs px-3 py-1.5 rounded-full border border-border bg-card hover:bg-accent transition-colors text-muted-foreground hover:text-foreground">
+                    ⚠️ Low Attendance
+                </button>
+                <button onclick="askQuick('What notes are available for download?')"
+                    class="text-xs px-3 py-1.5 rounded-full border border-border bg-card hover:bg-accent transition-colors text-muted-foreground hover:text-foreground">
+                    📚 Available Notes
+                </button>
+                <button onclick="askQuick('Show my internal marks summary')"
+                    class="text-xs px-3 py-1.5 rounded-full border border-border bg-card hover:bg-accent transition-colors text-muted-foreground hover:text-foreground">
+                    🎯 My Marks
+                </button>
+            </div>
+
             <!-- Empty element for scrolling -->
             <div id="chatAnchor" class="h-4"></div>
         </div>
@@ -79,6 +104,14 @@
         const chatAnchor = document.getElementById('chatAnchor');
 
         if (!chatForm) return;
+
+        // Quick action button handler
+        window.askQuick = function(text) {
+            questionInput.value = text;
+            chatForm.dispatchEvent(new Event('submit'));
+            const qa = document.getElementById('quickActions');
+            if (qa) qa.style.display = 'none';
+        };
 
         function scrollToBottom() {
             chatAnchor.scrollIntoView({ behavior: 'smooth' });
