@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+
+{% block title %}Enter Internal Marks - Teacher{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-6">
+    <div>
+        <h1 class="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <i data-lucide="edit-3" class="h-8 w-8 text-primary"></i>
+            Enter Internal Marks
+        </h1>
+        <p class="text-muted-foreground mt-1">Select a subject and exam type to manually enter student marks.</p>
+    </div>
+
+    <!-- Filter/Selection -->
+    <div class="shadcn-card bg-muted/20 border-border/50">
+        <div class="shadcn-card-content p-4">
+            <form id="marksFilterForm" class="flex flex-col sm:flex-row gap-4 items-end">
+                <div class="space-y-2 flex-1 w-full">
+                    <label for="subjectSelect" class="text-sm font-medium leading-none">Subject</label>
+                    <div class="relative w-full">
+                        <select id="subjectSelect"
+                            class="flex h-10 w-full appearance-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background pr-8 focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                            <option value="" selected disabled>Choose a subject...</option>
+                            {% for subject in subjects %}
+                            <option value="{{ subject.id }}">{{ subject.code }} - {{ subject.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <i data-lucide="chevron-down"
+                            class="absolute right-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none"></i>
+                    </div>
+                </div>
+                
+                <div class="space-y-2 flex-1 w-full">
+                    <label for="examTypeSelect" class="text-sm font-medium leading-none">Exam Type</label>
+                    <div class="relative w-full">
+                        <select id="examTypeSelect"
+                            class="flex h-10 w-full appearance-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background pr-8 focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                            <option value="" selected disabled>Choose exam type...</option>
+                            {% for type in exam_types %}
+                            <option value="{{ type }}">{{ type }}</option>
+                            {% endfor %}
+                        </select>
+                        <i data-lucide="chevron-down"
+                            class="absolute right-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none"></i>
+                    </div>
+                </div>
+                
+                <div class="space-y-2 w-full sm:w-32">
+                    <label for="maxMarksInput" class="text-sm font-medium leading-none">Max Marks</label>
+                    <input type="number" id="maxMarksInput" value="50" min="1" step="0.5"
+                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                </div>
+
+                <button type="button" id="loadStudentsBtn"
+                    class="shadcn-btn shadcn-btn-primary w-full sm:w-auto h-10 px-8 whitespace-nowrap">
+                    <i data-lucide="users" class="mr-2 h-4 w-4"></i> Load Students
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="marksContainer" class="hidden flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+        <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold flex items-center gap-2">
+                <i data-lucide="users-round" class="h-5 w-5 text-primary"></i> Enrolled Students
+            </h3>
+        </div>
+
+        <!-- Student List Card -->
+        <div class="shadcn-card overflow-hidden">
+            <div class="p-0">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left align-middle" id="studentsTable">
+                        <thead class="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
+                            <tr>
+                                <th class="px-6 py-4 font-medium w-32">Student ID</th>
+                                <th class="px-6 py-4 font-medium">Name</th>
+                                <th class="px-6 py-4 font-medium text-right w-64">Marks Obtained</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-border" id="studentListBody">
+                            {% for student in students %}
+                            <tr class="hover:bg-muted/30 transition-colors student-row"
+                                data-student-id="{{ student.id }}">
+                                <td class="px-6 py-4 whitespace-nowrap text-foreground font-medium font-mono">
+                                    {{ student.student_id or student.id }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="font-medium text-foreground">{{ student.full_name }}</div>
+                                    <div class="text-xs text-muted-foreground">{{ student.department }}</div>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <input type="number" step="0.5" min="0" class="mark-input flex h-9 w-24 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary text-right font-medium" placeholder="-" />
+                                        <span class="text-muted-foreground text-xs font-medium max-marks-display">/ 50</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="px-6 py-12 text-center text-muted-foreground">
+                                    <div class="flex flex-col items-center justify-center">
+                                        <div class="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-3 text-muted-foreground">
+                                            <i data-lucide="users-x" class="h-6 w-6"></i>
+                                        </div>
+                                        <p class="font-medium">No students found in the database.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="shadcn-card-footer bg-muted/10 border-t border-border p-4 flex justify-between items-center"
+                id="tableFooter">
+                <span class="text-sm text-muted-foreground">Total Students: <span id="studentCount"
+                        class="font-bold text-foreground">{{ students|length }}</span></span>
+                <button type="button" id="submitMarksBtn" class="shadcn-btn shadcn-btn-primary px-8">
+                    <i data-lucide="save" class="mr-2 h-4 w-4"></i> Save All Marks
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const loadBtn = document.getElementById('loadStudentsBtn');
+        if (loadBtn) {
+            loadBtn.addEventListener('click', loadMarksData);
+        }
+
+        const submitBtn = document.getElementById('submitMarksBtn');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', submitBulkMarks);
+        }
+        
+        const maxMarksInput = document.getElementById('maxMarksInput');
+        if (maxMarksInput) {
+            maxMarksInput.addEventListener('input', function() {
+                const max = this.value || 50;
+                document.querySelectorAll('.max-marks-display').forEach(el => {
+                    el.textContent = `/ ${max}`;
+                });
+                document.querySelectorAll('.mark-input').forEach(el => {
+                    el.max = max;
+                });
+            });
+        }
+    });
+
+    async function loadMarksData() {
+        const subjectId = document.getElementById('subjectSelect').value;
+        const examType = document.getElementById('examTypeSelect').value;
+        const loadBtn = document.getElementById('loadStudentsBtn');
+
+        if (!subjectId || !examType) {
+            showToast('destructive', 'Please select both a subject and an exam type.', 'alert-circle');
+            return;
+        }
+
+        const originalBtnHTML = loadBtn.innerHTML;
+        loadBtn.disabled = true;
+        loadBtn.innerHTML = '<i data-lucide="loader-2" class="mr-2 h-4 w-4 animate-spin"></i> Loading...';
+        if (window.lucide) window.lucide.createIcons();
+        
+        // Hide container temporarily
+        document.getElementById('marksContainer').classList.add('hidden');
+        document.getElementById('marksContainer').classList.remove('flex');
+        
+        // Clear previous inputs
+        document.querySelectorAll('.mark-input').forEach(input => input.value = '');
+
+        try {
+            // Fetch existing marks
+            const response = await fetch(`{{ url_for('teacher.get_marks') }}?subject_id=${subjectId}&exam_type=${examType}`);
+            const result = await response.json();
+            
+            if (result.success && result.marks) {
+                // Populate existing marks
+                for (const [studentId, marks] of Object.entries(result.marks)) {
+                    const row = document.querySelector(`.student-row[data-student-id="${studentId}"]`);
+                    if (row) {
+                        const input = row.querySelector('.mark-input');
+                        if (input) input.value = marks;
+                    }
+                }
+            }
+            
+            document.getElementById('marksContainer').classList.remove('hidden');
+            document.getElementById('marksContainer').classList.add('flex');
+            
+            showToast('emerald-600', 'Students and existing marks loaded.', 'check-circle-2', 'bg-emerald-100 border-emerald-200');
+            
+        } catch (error) {
+            showToast('destructive', 'Failed to fetch existing marks data.', 'alert-circle');
+            document.getElementById('marksContainer').classList.remove('hidden');
+            document.getElementById('marksContainer').classList.add('flex');
+        } finally {
+            loadBtn.disabled = false;
+            loadBtn.innerHTML = '<i data-lucide="refresh-cw" class="mr-2 h-4 w-4"></i> Reload Data';
+            if (window.lucide) window.lucide.createIcons();
+        }
+    }
+
+    async function submitBulkMarks() {
+        const subjectId = document.getElementById('subjectSelect').value;
+        const examType = document.getElementById('examTypeSelect').value;
+        const maxMarks = document.getElementById('maxMarksInput').value || 50;
+        
+        if (!subjectId || !examType) {
+            showToast('amber-600', 'Subject and Exam Type required.', 'alert-triangle');
+            return;
+        }
+
+        const submitBtn = document.getElementById('submitMarksBtn');
+        const originalBtnHTML = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i data-lucide="loader-2" class="mr-2 h-4 w-4 animate-spin"></i> Saving...';
+        if (window.lucide) window.lucide.createIcons();
+
+        const rows = document.querySelectorAll('.student-row');
+        const promises = [];
+        let successCount = 0;
+        let failCount = 0;
+        let skippedCount = 0;
+
+        for (const row of rows) {
+            const studentId = row.getAttribute('data-student-id');
+            const input = row.querySelector('.mark-input');
+            const marksValue = input.value;
+            
+            if (marksValue !== '') {
+                const promise = fetch('/teacher/enter-marks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        student_id: parseInt(studentId),
+                        subject_id: parseInt(subjectId),
+                        exam_type: examType,
+                        marks: parseFloat(marksValue),
+                        max_marks: parseFloat(maxMarks)
+                    })
+                }).then(r => r.json()).then(result => {
+                    if (result.success) successCount++;
+                    else failCount++;
+                }).catch(() => failCount++);
+                promises.push(promise);
+            } else {
+                skippedCount++;
+            }
+        }
+        
+        if (promises.length === 0) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnHTML;
+            if (window.lucide) window.lucide.createIcons();
+            showToast('amber-600', 'No marks entered to save.', 'alert-triangle', 'bg-amber-100 border-amber-200');
+            return;
+        }
+
+        await Promise.all(promises);
+
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnHTML;
+        if (window.lucide) window.lucide.createIcons();
+
+        if (failCount === 0 && successCount > 0) {
+            showToast('green-600', `Successfully saved marks for ${successCount} students.`, 'check-circle', 'bg-green-100 border-green-200');
+            
+            // Play success sound
+            try {
+                const ac = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ac.createOscillator();
+                const gain = ac.createGain();
+                osc.connect(gain); gain.connect(ac.destination);
+                osc.frequency.value = 800;
+                gain.gain.setValueAtTime(0.3, ac.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + 0.3);
+                osc.start(ac.currentTime); osc.stop(ac.currentTime + 0.3);
+            } catch (e) { }
+            
+        } else if (successCount > 0) {
+            showToast('amber-600', `Saved ${successCount}, but failed to save ${failCount}.`, 'alert-triangle', 'bg-amber-100 border-amber-200');
+        } else {
+            showToast('destructive', 'Failed to save marks. Please check network connection.', 'x-circle', 'bg-destructive/10 border-destructive/20');
+        }
+    }
+
+    // Modern Toast Notification
+    function showToast(textColor, messageHTML, iconName, bgClasses = 'bg-accent border-border') {
+        const toastContainer = document.getElementById('flash-container') || document.body;
+        const toast = document.createElement('div');
+        toast.className = `fixed top-20 right-4 z-50 flex items-center justify-between gap-3 p-4 rounded-lg border ${bgClasses} text-${textColor} shadow-lg animate-in fade-in slide-in-from-top-5 duration-300 transform min-w-[300px]`;
+        toast.innerHTML = `
+            <div class="flex items-center gap-3">
+                <i data-lucide="${iconName}" class="h-5 w-5 shrink-0"></i>
+                <div class="text-sm font-medium">${messageHTML}</div>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-current opacity-70 hover:opacity-100 transition-opacity ml-4">
+                <i data-lucide="x" class="h-4 w-4"></i>
+            </button>
+        `;
+        toastContainer.appendChild(toast);
+        if (window.lucide) window.lucide.createIcons();
+
+        setTimeout(() => {
+            toast.classList.add('animate-out', 'fade-out', 'slide-out-to-top-5');
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
+    }
+</script>
+{% endblock %}

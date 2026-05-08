@@ -6,10 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Attendance System{% endblock %}</title>
 
-    <!-- Google Fonts: Inter -->
+    <!-- Google Fonts: Nunito -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Tailwind CSS (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -26,7 +26,7 @@
                 },
                 extend: {
                     fontFamily: {
-                        sans: ["Inter", "sans-serif"],
+                        sans: ["Nunito", "sans-serif"],
                     },
                     colors: {
                         border: "hsl(var(--border))",
@@ -77,192 +77,218 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v={{ range(1, 1000000) | random }}">
 
     {% block extra_css %}{% endblock %}
 </head>
 
-<body class="min-h-screen bg-background text-foreground font-sans antialiased flex flex-col">
+<body class="bg-background text-foreground font-sans antialiased flex overflow-hidden h-screen">
+
     {% if session.user_id %}
-    <!-- Navigation Bar -->
-    <header
-        class="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div class="container flex h-14 items-center justify-between">
-            <div class="flex items-center gap-6 md:gap-8">
-                <a href="/" class="flex items-center space-x-2">
-                    <i data-lucide="graduation-cap" class="h-6 w-6 text-primary"></i>
-                    <span class="font-bold inline-block">Attendance AI</span>
-                </a>
+    <!-- Desktop Left Sidebar -->
+    <aside class="hidden md:flex flex-col w-64 bg-card border-r border-border h-full shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20 flex-shrink-0">
+        <!-- Logo Area -->
+        <div class="h-20 flex items-center px-6 border-b border-border/50">
+            <i data-lucide="graduation-cap" class="h-8 w-8 text-primary mr-3"></i>
+            <span class="font-extrabold text-xl tracking-tight text-foreground">Attendance AI</span>
+        </div>
 
-                <!-- Desktop Nav -->
-                <nav class="hidden md:flex items-center space-x-4 text-sm font-medium">
-                    {% if session.role == 'STUDENT' %}
-                    <a href="{{ url_for('student.dashboard') }}"
-                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
-                            data-lucide="layout-dashboard" class="h-4 w-4"></i> Dashboard</a>
-                    <a href="{{ url_for('student.attendance') }}"
-                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
-                            data-lucide="calendar-check" class="h-4 w-4"></i> Attendance</a>
-                    <a href="{{ url_for('student.ai_assistant') }}"
-                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
-                            data-lucide="bot" class="h-4 w-4"></i> AI Assistant</a>
-                    <a href="{{ url_for('student.timetable') }}"
-                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
-                            data-lucide="clock" class="h-4 w-4"></i> Timetable</a>
-                    <a href="{{ url_for('student.notes') }}"
-                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
-                            data-lucide="book-open" class="h-4 w-4"></i> Notes</a>
-                    {% elif session.role == 'TEACHER' %}
-                    <a href="{{ url_for('teacher.dashboard') }}"
-                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
-                            data-lucide="layout-dashboard" class="h-4 w-4"></i> Dashboard</a>
-                    <a href="{{ url_for('teacher.mark_attendance_page') }}"
-                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
-                            data-lucide="camera" class="h-4 w-4"></i> Mark Attendance</a>
-                    <a href="{{ url_for('teacher.view_students') }}"
-                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
-                            data-lucide="users" class="h-4 w-4"></i> Students</a>
-                    <a href="{{ url_for('teacher.notes_page') }}"
-                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
-                            data-lucide="book-open" class="h-4 w-4"></i> Notes</a>
-                    <a href="{{ url_for('teacher.upload_attendance_page') }}"
-                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
-                            data-lucide="upload" class="h-4 w-4"></i> Upload</a>
-                    {% elif session.role == 'ADMIN' %}
-                    <a href="{{ url_for('admin.dashboard') }}"
-                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
-                            data-lucide="layout-dashboard" class="h-4 w-4"></i> Dashboard</a>
-                    <a href="{{ url_for('admin.manage_users') }}"
-                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
-                            data-lucide="users" class="h-4 w-4"></i> Users</a>
-                    <a href="{{ url_for('admin.manage_timetable') }}"
-                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
-                            data-lucide="clock" class="h-4 w-4"></i> Timetable</a>
-                    <a href="{{ url_for('admin.ai_training') }}"
-                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
-                            data-lucide="brain" class="h-4 w-4"></i> AI Training</a>
-                    <a href="{{ url_for('admin.upload_excel_page') }}"
-                        class="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-1"><i
-                            data-lucide="upload" class="h-4 w-4"></i> Upload Data</a>
-                    {% endif %}
-                </nav>
+        <!-- Navigation Links -->
+        <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+            {% if session.role == 'STUDENT' %}
+            <a href="{{ url_for('student.dashboard') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'student.dashboard' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                <i data-lucide="layout-dashboard" class="h-5 w-5"></i> Dashboard</a>
+            <a href="{{ url_for('student.attendance') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'student.attendance' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                <i data-lucide="calendar-check" class="h-5 w-5"></i> Attendance</a>
+            <a href="{{ url_for('student.ai_assistant') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'student.ai_assistant' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                <i data-lucide="bot" class="h-5 w-5"></i> AI Assistant</a>
+            <a href="{{ url_for('student.timetable') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'student.timetable' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                <i data-lucide="clock" class="h-5 w-5"></i> Timetable</a>
+            <a href="{{ url_for('student.notes') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'student.notes' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                <i data-lucide="book-open" class="h-5 w-5"></i> Notes</a>
+            
+            {% elif session.role == 'TEACHER' %}
+            <a href="{{ url_for('teacher.dashboard') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'teacher.dashboard' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                <i data-lucide="layout-dashboard" class="h-5 w-5"></i> Dashboard</a>
+            <a href="{{ url_for('teacher.ai_assistant') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'teacher.ai_assistant' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                <i data-lucide="bot" class="h-5 w-5"></i> AI Assistant</a>
+            <a href="{{ url_for('teacher.mark_attendance_page') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'teacher.mark_attendance_page' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                <i data-lucide="camera" class="h-5 w-5"></i> Mark Attendance</a>
+            <a href="{{ url_for('teacher.view_students') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'teacher.view_students' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                <i data-lucide="users" class="h-5 w-5"></i> Students</a>
+            <a href="{{ url_for('teacher.notes_page') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'teacher.notes_page' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                <i data-lucide="book-open" class="h-5 w-5"></i> Notes</a>
+            <div class="pt-4 pb-2">
+                <p class="px-4 text-xs font-bold text-muted-foreground/60 uppercase tracking-wider">Management</p>
             </div>
+            <a href="{{ url_for('teacher.upload_attendance_page') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'teacher.upload_attendance_page' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                <i data-lucide="upload" class="h-5 w-5"></i> Upload Attendance</a>
+            <a href="{{ url_for('teacher.enter_marks_page') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'teacher.enter_marks_page' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                <i data-lucide="edit-3" class="h-5 w-5"></i> Enter Marks</a>
+            <a href="{{ url_for('teacher.upload_marks_page') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'teacher.upload_marks_page' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                <i data-lucide="upload-cloud" class="h-5 w-5"></i> Upload Marks</a>
+            
+            {% elif session.role == 'ADMIN' %}
+            <a href="{{ url_for('admin.dashboard') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'admin.dashboard' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                <i data-lucide="layout-dashboard" class="h-5 w-5"></i> Dashboard</a>
+            <a href="{{ url_for('admin.manage_users') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'admin.manage_users' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                <i data-lucide="users" class="h-5 w-5"></i> Users</a>
+            <a href="{{ url_for('admin.manage_timetable') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'admin.manage_timetable' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                <i data-lucide="clock" class="h-5 w-5"></i> Timetable</a>
+            <a href="{{ url_for('admin.ai_training') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'admin.ai_training' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                <i data-lucide="brain" class="h-5 w-5"></i> AI Training</a>
+            <a href="{{ url_for('admin.upload_excel_page') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'admin.upload_excel_page' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                <i data-lucide="upload" class="h-5 w-5"></i> Upload Data</a>
+            {% endif %}
+        </nav>
 
-            <div class="flex items-center gap-2">
-                <!-- User dropdown -->
-                <div class="relative">
-                    <button id="userDropdownBtn"
-                        class="flex items-center gap-2 text-sm font-medium transition-colors hover:text-foreground/80 focus:outline-none">
-                        <div class="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                            <i data-lucide="user" class="h-4 w-4"></i>
-                        </div>
-                        <span class="hidden md:inline-block">{{ session.full_name }}</span>
-                        <i data-lucide="chevron-down" class="h-4 w-4 text-muted-foreground hidden md:inline-block"></i>
-                    </button>
-                    <!-- Dropdown Content -->
-                    <div id="userDropdownContent"
-                        class="absolute right-0 top-full mt-2 w-48 rounded-md border border-border bg-popover text-popover-foreground shadow-md hidden z-50">
-                        <div class="px-3 py-2 text-sm font-semibold border-b border-border">{{ session.full_name }}
-                        </div>
-                        <div class="p-1">
-                            <a href="{{ url_for('auth.logout') }}"
-                                class="cursor-pointer relative flex w-full select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground text-destructive hover:text-destructive">
-                                <i data-lucide="log-out" class="mr-2 h-4 w-4"></i>
-                                <span>Logout</span>
-                            </a>
-                        </div>
+        <!-- Sidebar Footer / User Profile -->
+        <div class="p-4 border-t border-border/50">
+            <div class="relative w-full">
+                <button id="userDropdownBtn" class="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-secondary/50 transition-colors text-left focus:outline-none">
+                    <div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                        <i data-lucide="user" class="h-5 w-5"></i>
                     </div>
-                </div>
-
-                <!-- Mobile Menu Button -->
-                <button id="mobileMenuBtn"
-                    class="md:hidden flex items-center justify-center h-8 w-8 rounded-md text-foreground hover:bg-accent focus:outline-none">
-                    <i data-lucide="menu" class="h-5 w-5"></i>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-bold text-foreground truncate">{{ session.full_name }}</p>
+                        <p class="text-xs text-muted-foreground font-semibold truncate">{{ session.role|capitalize }}</p>
+                    </div>
+                    <i data-lucide="chevron-up" class="h-4 w-4 text-muted-foreground"></i>
                 </button>
+                <!-- Dropdown -->
+                <div id="userDropdownContent" class="absolute bottom-full left-0 mb-2 w-full rounded-xl border border-border bg-card shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] hidden z-50 overflow-hidden">
+                    <a href="{{ url_for('auth.logout') }}" class="flex items-center px-4 py-3 text-sm font-bold text-destructive hover:bg-destructive/10 transition-colors">
+                        <i data-lucide="log-out" class="h-4 w-4 mr-3"></i> Logout
+                    </a>
+                </div>
             </div>
         </div>
-
-        <!-- Mobile Nav Menu -->
-        <div id="mobileMenuContent" class="hidden border-b border-border bg-background p-4 md:hidden">
-            <nav class="flex flex-col space-y-3 text-sm font-medium">
-                {% if session.role == 'STUDENT' %}
-                <a href="{{ url_for('student.dashboard') }}" class="flex items-center gap-2 text-foreground/70"><i
-                        data-lucide="layout-dashboard" class="h-4 w-4"></i> Dashboard</a>
-                <a href="{{ url_for('student.attendance') }}" class="flex items-center gap-2 text-foreground/70"><i
-                        data-lucide="calendar-check" class="h-4 w-4"></i> Attendance</a>
-                <a href="{{ url_for('student.ai_assistant') }}" class="flex items-center gap-2 text-foreground/70"><i
-                        data-lucide="bot" class="h-4 w-4"></i> AI Assistant</a>
-                <a href="{{ url_for('student.timetable') }}" class="flex items-center gap-2 text-foreground/70"><i
-                        data-lucide="clock" class="h-4 w-4"></i> Timetable</a>
-                <a href="{{ url_for('student.notes') }}" class="flex items-center gap-2 text-foreground/70"><i
-                        data-lucide="book-open" class="h-4 w-4"></i> Notes</a>
-                {% elif session.role == 'TEACHER' %}
-                <a href="{{ url_for('teacher.dashboard') }}" class="flex items-center gap-2 text-foreground/70"><i
-                        data-lucide="layout-dashboard" class="h-4 w-4"></i> Dashboard</a>
-                <a href="{{ url_for('teacher.mark_attendance_page') }}"
-                    class="flex items-center gap-2 text-foreground/70"><i data-lucide="camera" class="h-4 w-4"></i> Mark
-                    Attendance</a>
-                <a href="{{ url_for('teacher.view_students') }}" class="flex items-center gap-2 text-foreground/70"><i
-                        data-lucide="users" class="h-4 w-4"></i> Students</a>
-                <a href="{{ url_for('teacher.notes_page') }}" class="flex items-center gap-2 text-foreground/70"><i
-                        data-lucide="book-open" class="h-4 w-4"></i> Notes</a>
-                <a href="{{ url_for('teacher.upload_attendance_page') }}" class="flex items-center gap-2 text-foreground/70"><i
-                        data-lucide="upload" class="h-4 w-4"></i> Upload</a>
-                {% elif session.role == 'ADMIN' %}
-                <a href="{{ url_for('admin.dashboard') }}" class="flex items-center gap-2 text-foreground/70"><i
-                        data-lucide="layout-dashboard" class="h-4 w-4"></i> Dashboard</a>
-                <a href="{{ url_for('admin.manage_users') }}" class="flex items-center gap-2 text-foreground/70"><i
-                        data-lucide="users" class="h-4 w-4"></i> Users</a>
-                <a href="{{ url_for('admin.manage_timetable') }}" class="flex items-center gap-2 text-foreground/70"><i
-                        data-lucide="clock" class="h-4 w-4"></i> Timetable</a>
-                <a href="{{ url_for('admin.ai_training') }}" class="flex items-center gap-2 text-foreground/70"><i
-                        data-lucide="brain" class="h-4 w-4"></i> AI Training</a>
-                <a href="{{ url_for('admin.upload_excel_page') }}" class="flex items-center gap-2 text-foreground/70"><i
-                        data-lucide="upload" class="h-4 w-4"></i> Upload Data</a>
-                {% endif %}
-            </nav>
-        </div>
-    </header>
+    </aside>
     {% endif %}
 
-    <!-- Flash Messages (styled as toast notifications) -->
-    <div class="fixed top-16 right-4 z-50 flex flex-col gap-2 pointer-events-none" id="flash-container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        {% for category, message in messages %}
-        <div class="pointer-events-auto rounded-md border border-border bg-background p-4 shadow-md max-w-sm flex items-start gap-3 animate-in"
-            role="alert">
-            {% if category == 'success' %}
-            <i data-lucide="check-circle-2" class="h-5 w-5 text-green-500 mt-0.5"></i>
-            {% elif category == 'danger' or category == 'error' %}
-            <i data-lucide="alert-circle" class="h-5 w-5 text-destructive mt-0.5"></i>
-            {% else %}
-            <i data-lucide="info" class="h-5 w-5 text-primary mt-0.5"></i>
-            {% endif %}
-            <div class="text-sm font-medium text-foreground">{{ message }}</div>
-            <button type="button" class="ml-auto text-muted-foreground hover:text-foreground"
-                onclick="this.parentElement.remove()">
-                <i data-lucide="x" class="h-4 w-4"></i>
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        
+        {% if session.user_id %}
+        <!-- Mobile Header (Hidden on Desktop) -->
+        <header class="md:hidden flex items-center justify-between h-16 px-4 bg-card border-b border-border z-20">
+            <div class="flex items-center gap-2">
+                <i data-lucide="graduation-cap" class="h-6 w-6 text-primary"></i>
+                <span class="font-extrabold text-lg tracking-tight text-foreground">Attendance AI</span>
+            </div>
+            <button id="mobileMenuBtn" class="p-2 text-foreground hover:bg-secondary rounded-lg focus:outline-none">
+                <i data-lucide="menu" class="h-6 w-6"></i>
             </button>
+        </header>
+
+        <!-- Mobile Nav Menu (Hidden by default) -->
+        <div id="mobileMenuContent" class="hidden absolute top-16 left-0 w-full bg-card border-b border-border p-4 z-50 shadow-xl md:hidden">
+            <nav class="flex flex-col space-y-2">
+                {% if session.role == 'STUDENT' %}
+                <a href="{{ url_for('student.dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'student.dashboard' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                    <i data-lucide="layout-dashboard" class="h-5 w-5"></i> Dashboard</a>
+                <a href="{{ url_for('student.attendance') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'student.attendance' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                    <i data-lucide="calendar-check" class="h-5 w-5"></i> Attendance</a>
+                <a href="{{ url_for('student.ai_assistant') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'student.ai_assistant' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                    <i data-lucide="bot" class="h-5 w-5"></i> AI Assistant</a>
+                <a href="{{ url_for('student.timetable') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'student.timetable' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                    <i data-lucide="clock" class="h-5 w-5"></i> Timetable</a>
+                <a href="{{ url_for('student.notes') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'student.notes' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                    <i data-lucide="book-open" class="h-5 w-5"></i> Notes</a>
+                {% elif session.role == 'TEACHER' %}
+                <a href="{{ url_for('teacher.dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'teacher.dashboard' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                    <i data-lucide="layout-dashboard" class="h-5 w-5"></i> Dashboard</a>
+                <a href="{{ url_for('teacher.ai_assistant') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'teacher.ai_assistant' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                    <i data-lucide="bot" class="h-5 w-5"></i> AI Assistant</a>
+                <a href="{{ url_for('teacher.mark_attendance_page') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'teacher.mark_attendance_page' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                    <i data-lucide="camera" class="h-5 w-5"></i> Mark Attendance</a>
+                <a href="{{ url_for('teacher.view_students') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'teacher.view_students' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                    <i data-lucide="users" class="h-5 w-5"></i> Students</a>
+                <a href="{{ url_for('teacher.notes_page') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'teacher.notes_page' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                    <i data-lucide="book-open" class="h-5 w-5"></i> Notes</a>
+                <a href="{{ url_for('teacher.upload_attendance_page') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'teacher.upload_attendance_page' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                    <i data-lucide="upload" class="h-5 w-5"></i> Upload Attendance</a>
+                <a href="{{ url_for('teacher.enter_marks_page') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'teacher.enter_marks_page' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                    <i data-lucide="edit-3" class="h-5 w-5"></i> Enter Marks</a>
+                <a href="{{ url_for('teacher.upload_marks_page') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'teacher.upload_marks_page' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                    <i data-lucide="upload-cloud" class="h-5 w-5"></i> Upload Marks</a>
+                {% elif session.role == 'ADMIN' %}
+                <a href="{{ url_for('admin.dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'admin.dashboard' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                    <i data-lucide="layout-dashboard" class="h-5 w-5"></i> Dashboard</a>
+                <a href="{{ url_for('admin.manage_users') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'admin.manage_users' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                    <i data-lucide="users" class="h-5 w-5"></i> Users</a>
+                <a href="{{ url_for('admin.manage_timetable') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'admin.manage_timetable' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                    <i data-lucide="clock" class="h-5 w-5"></i> Timetable</a>
+                <a href="{{ url_for('admin.ai_training') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'admin.ai_training' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                    <i data-lucide="brain" class="h-5 w-5"></i> AI Training</a>
+                <a href="{{ url_for('admin.upload_excel_page') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'admin.upload_excel_page' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                    <i data-lucide="upload" class="h-5 w-5"></i> Upload Data</a>
+                {% endif %}
+                <div class="border-t border-border pt-2 mt-2">
+                    <a href="{{ url_for('auth.logout') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold text-destructive hover:bg-destructive/10">
+                        <i data-lucide="log-out" class="h-5 w-5"></i> Logout
+                    </a>
+                </div>
+            </nav>
         </div>
-        {% endfor %}
         {% endif %}
-        {% endwith %}
-    </div>
 
-    <!-- Main Content -->
-    <main class="flex-1 container py-6 mx-auto animate-in">
-        {% block content %}{% endblock %}
-    </main>
-
-    <!-- Footer -->
-    <footer class="border-t border-border py-6 md:py-0 bg-background">
-        <div class="container mx-auto flex flex-col items-center justify-between gap-4 md:h-16 md:flex-row">
-            <p class="text-sm text-muted-foreground leading-loose text-center md:text-left">
-                &copy; {{ current_year|default('2024') }} Face Recognition Attendance System. All Rights Reserved.
-            </p>
+        <!-- Flash Messages -->
+        <div class="fixed top-6 right-6 z-50 flex flex-col gap-3 pointer-events-none" id="flash-container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="pointer-events-auto rounded-xl border-l-4 {% if category == 'success' %}border-green-500{% elif category == 'danger' or category == 'error' %}border-destructive{% else %}border-primary{% endif %} bg-card p-4 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] max-w-md flex items-start gap-4 animate-in"
+                role="alert">
+                {% if category == 'success' %}
+                <div class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="check" class="h-4 w-4 text-green-600"></i>
+                </div>
+                {% elif category == 'danger' or category == 'error' %}
+                <div class="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="alert-triangle" class="h-4 w-4 text-red-600"></i>
+                </div>
+                {% else %}
+                <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="info" class="h-4 w-4 text-blue-600"></i>
+                </div>
+                {% endif %}
+                <div class="flex-1 mt-1 text-sm font-bold text-foreground leading-relaxed">{{ message }}</div>
+                <button type="button" class="text-muted-foreground hover:text-foreground focus:outline-none transition-colors"
+                    onclick="this.closest('[role=\'alert\']').remove()">
+                    <i data-lucide="x" class="h-5 w-5"></i>
+                </button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
         </div>
-    </footer>
+
+        <!-- Scrollable Main Content -->
+        <main class="flex-1 overflow-y-auto p-4 md:p-8 animate-in relative">
+            <div class="max-w-7xl mx-auto">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -272,17 +298,24 @@
         // Initialize Lucide icons
         lucide.createIcons();
 
-        // Dropdown Logic
+        // Dropdown Logic for Desktop User Profile
         const userDropdownBtn = document.getElementById('userDropdownBtn');
         const userDropdownContent = document.getElementById('userDropdownContent');
         if (userDropdownBtn && userDropdownContent) {
             userDropdownBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 userDropdownContent.classList.toggle('hidden');
+                const icon = userDropdownBtn.querySelector('.lucide-chevron-up');
+                if (icon) {
+                    icon.style.transform = userDropdownContent.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+                    icon.style.transition = 'transform 0.2s';
+                }
             });
             document.addEventListener('click', (e) => {
-                if (!userDropdownContent.contains(e.target)) {
+                if (!userDropdownContent.contains(e.target) && !userDropdownBtn.contains(e.target)) {
                     userDropdownContent.classList.add('hidden');
+                    const icon = userDropdownBtn.querySelector('.lucide-chevron-up');
+                    if (icon) icon.style.transform = 'rotate(0deg)';
                 }
             });
         }
@@ -296,20 +329,18 @@
             });
         }
 
-        // Auto-dismiss flashes after 5s
+        // Auto-dismiss flashes
         setTimeout(() => {
-            const flashes = document.querySelectorAll('#flash-container [role="alert"]');
-            flashes.forEach(f => {
-                f.style.opacity = '0';
-                f.style.transition = 'opacity 0.5s ease';
-                setTimeout(() => f.remove(), 500);
+            const flashes = document.querySelectorAll('[role="alert"]');
+            flashes.forEach(flash => {
+                flash.style.opacity = '0';
+                flash.style.transform = 'translateY(-10px)';
+                flash.style.transition = 'all 0.4s ease';
+                setTimeout(() => flash.remove(), 400);
             });
         }, 5000);
     </script>
-
-    <!-- Custom JS -->
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-
+    
     {% block extra_js %}{% endblock %}
 </body>
 

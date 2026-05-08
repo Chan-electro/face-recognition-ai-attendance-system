@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Internal Marks - Teacher{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-6">
+    <div>
+        <h1 class="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <i data-lucide="award" class="h-8 w-8 text-primary"></i>
+            Upload Internal Marks
+        </h1>
+        <p class="text-muted-foreground mt-1">Import exam and assignment marks from Excel or CSV files.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Upload Form -->
+        <div class="shadcn-card p-6">
+            <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <i data-lucide="upload-cloud" class="h-5 w-5 text-primary"></i>
+                Upload File
+            </h3>
+            <form id="uploadForm" enctype="multipart/form-data" class="space-y-4">
+                <div class="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer bg-muted/20"
+                    id="dropZone" onclick="document.getElementById('fileInput').click()">
+                    <i data-lucide="file-spreadsheet" class="h-12 w-12 mx-auto text-muted-foreground mb-3"></i>
+                    <p class="text-sm font-medium text-foreground">Click or drag file here</p>
+                    <p class="text-xs text-muted-foreground mt-1">Accepts .xlsx, .xls, or .csv</p>
+                    <div id="fileStatus" class="mt-4 hidden p-2 bg-primary/10 rounded-md border border-primary/20">
+                        <p id="fileName" class="text-sm font-medium text-primary flex items-center justify-center gap-2">
+                            <i data-lucide="file-check-2" class="h-4 w-4"></i> <span></span>
+                        </p>
+                    </div>
+                </div>
+                <input type="file" id="fileInput" name="file" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFile(this)">
+                
+                <button type="submit" id="uploadBtn" class="shadcn-btn shadcn-btn-primary w-full" disabled>
+                    <i data-lucide="upload" class="mr-2 h-4 w-4"></i> Upload & Import Marks
+                </button>
+            </form>
+        </div>
+
+        <!-- Format Guide -->
+        <div class="shadcn-card p-6">
+            <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <i data-lucide="table" class="h-5 w-5 text-primary"></i>
+                Required Format
+            </h3>
+            <p class="text-sm text-muted-foreground mb-4">Ensure your Excel or CSV file contains the following exact column headers.</p>
+            
+            <div class="overflow-x-auto rounded-md border border-border">
+                <table class="w-full text-sm">
+                    <thead class="bg-muted/50 border-b border-border">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-medium">Student ID</th>
+                            <th class="px-4 py-3 text-left font-medium">Subject Code</th>
+                            <th class="px-4 py-3 text-left font-medium">Exam Type</th>
+                            <th class="px-4 py-3 text-right font-medium">Marks</th>
+                            <th class="px-4 py-3 text-right font-medium">Max Marks</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-muted-foreground divide-y divide-border">
+                        <tr class="hover:bg-muted/30">
+                            <td class="px-4 py-3 font-mono">CS001</td>
+                            <td class="px-4 py-3 font-mono">CS501</td>
+                            <td class="px-4 py-3">IA1</td>
+                            <td class="px-4 py-3 text-right text-foreground font-medium">45</td>
+                            <td class="px-4 py-3 text-right">50</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="px-4 py-3 font-mono">CS002</td>
+                            <td class="px-4 py-3 font-mono">CS501</td>
+                            <td class="px-4 py-3">ASSIGNMENT</td>
+                            <td class="px-4 py-3 text-right text-foreground font-medium">9.5</td>
+                            <td class="px-4 py-3 text-right">10</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-4 rounded-md bg-amber-500/10 border border-amber-500/20 p-3">
+                <p class="text-xs text-amber-700 flex items-start gap-2">
+                    <i data-lucide="info" class="h-4 w-4 shrink-0 mt-0.5"></i>
+                    <span><strong>Exam Types:</strong> Common values include IA1, IA2, IA3, ASSIGNMENT, SEE, LAB.</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Panel -->
+    <div id="resultsCard" class="shadcn-card p-6 hidden animate-in fade-in slide-in-from-bottom-4 duration-300 border-green-500/30">
+        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+            <i data-lucide="check-circle" class="h-5 w-5 text-green-500"></i> Import Results
+        </h3>
+        
+        <div id="resultStats" class="flex gap-4 mb-4 hidden">
+            <div class="bg-green-500/10 text-green-700 px-4 py-2 rounded-md font-medium text-sm flex items-center gap-2">
+                <i data-lucide="plus-circle" class="h-4 w-4"></i> <span id="importedCount">0</span> Imported
+            </div>
+            <div class="bg-blue-500/10 text-blue-700 px-4 py-2 rounded-md font-medium text-sm flex items-center gap-2">
+                <i data-lucide="refresh-cw" class="h-4 w-4"></i> <span id="updatedCount">0</span> Updated
+            </div>
+        </div>
+        
+        <div id="resultMessage" class="text-sm font-medium mb-4"></div>
+        
+        <div id="resultErrors" class="hidden bg-destructive/5 border border-destructive/20 rounded-md p-4">
+            <p class="text-sm font-semibold text-destructive mb-2 flex items-center gap-2">
+                <i data-lucide="alert-circle" class="h-4 w-4"></i> Errors encountered:
+            </p>
+            <ul id="errorList" class="text-xs text-destructive/80 space-y-1.5 max-h-40 overflow-y-auto list-disc list-inside"></ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function handleFile(input) {
+        if (input.files.length > 0) {
+            const fileNameSpan = document.querySelector('#fileName span');
+            fileNameSpan.textContent = input.files[0].name;
+            document.getElementById('fileStatus').classList.remove('hidden');
+            
+            const btn = document.getElementById('uploadBtn');
+            btn.disabled = false;
+            btn.classList.add('animate-pulse');
+            setTimeout(() => btn.classList.remove('animate-pulse'), 1000);
+        }
+    }
+
+    document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const btn = document.getElementById('uploadBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="mr-2 h-4 w-4 animate-spin"></i> Importing Data...';
+        if(window.lucide) window.lucide.createIcons();
+        
+        const formData = new FormData(this);
+        
+        try {
+            const resp = await fetch('{{ url_for("teacher.upload_marks") }}', {
+                method: 'POST', 
+                body: formData
+            });
+            const result = await resp.json();
+            
+            document.getElementById('resultsCard').classList.remove('hidden');
+            document.getElementById('resultMessage').textContent = result.message;
+            
+            if (result.success) {
+                document.getElementById('resultsCard').classList.add('bg-green-50/50');
+                document.getElementById('resultMessage').className = 'text-base font-medium text-green-700';
+                
+                if (result.imported !== undefined) {
+                    document.getElementById('resultStats').classList.remove('hidden');
+                    document.getElementById('importedCount').textContent = result.imported;
+                    document.getElementById('updatedCount').textContent = result.updated;
+                }
+            } else {
+                document.getElementById('resultsCard').classList.add('bg-red-50/50');
+                document.getElementById('resultMessage').className = 'text-base font-medium text-destructive';
+            }
+            
+            if (result.errors && result.errors.length > 0) {
+                document.getElementById('resultErrors').classList.remove('hidden');
+                const list = document.getElementById('errorList');
+                list.innerHTML = '';
+                result.errors.forEach(err => { 
+                    const li = document.createElement('li'); 
+                    li.textContent = err; 
+                    list.appendChild(li); 
+                });
+            } else { 
+                document.getElementById('resultErrors').classList.add('hidden'); 
+            }
+        } catch(err) {
+            document.getElementById('resultsCard').classList.remove('hidden');
+            document.getElementById('resultMessage').textContent = 'Network Error: ' + err.message;
+            document.getElementById('resultMessage').className = 'text-base font-medium text-destructive';
+        }
+        
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="upload" class="mr-2 h-4 w-4"></i> Upload & Import Marks';
+        if(window.lucide) window.lucide.createIcons();
+    });
+
+    const dz = document.getElementById('dropZone');
+    dz.addEventListener('dragover', e => { 
+        e.preventDefault(); 
+        dz.classList.add('border-primary', 'bg-primary/5'); 
+    });
+    dz.addEventListener('dragleave', () => {
+        dz.classList.remove('border-primary', 'bg-primary/5');
+    });
+    dz.addEventListener('drop', e => { 
+        e.preventDefault(); 
+        dz.classList.remove('border-primary', 'bg-primary/5'); 
+        document.getElementById('fileInput').files = e.dataTransfer.files; 
+        handleFile(document.getElementById('fileInput')); 
+    });
+</script>
+{% endblock %}

@@ -7,6 +7,8 @@ from models.attendance import Attendance
 from services.face_recognition_service import get_face_service
 from services.attendance_service import AttendanceService
 from services.report_service import ReportService
+from services.excel_service import ExcelService
+from models.internal_mark import InternalMark
 from datetime import datetime, date
 import base64
 
@@ -346,3 +348,166 @@ def delete_note(note_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@teacher_bp.route('/upload-marks')
+@role_required('TEACHER')
+def upload_marks_page():
+    """Internal Marks upload page for teachers"""
+    user = User.query.get(session.get('user_id'))
+    return render_template('teacher/upload_marks.html', user=user)
+
+
+@teacher_bp.route('/upload-marks', methods=['POST'])
+@role_required('TEACHER')
+def upload_marks():
+    """Handle internal marks Excel/CSV upload"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'success': False, 'message': 'No file provided'}), 400
+
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'success': False, 'message': 'No file selected'}), 400
+
+        from utils.file_utils import save_uploaded_file
+        filepath = save_uploaded_file(file, 'exports')
+        if not filepath:
+            return jsonify({'success': False, 'message': 'Invalid file type'}), 400
+
+        result = ExcelService.import_internal_marks(filepath, uploaded_by=session.get('user_id'))
+
+        import os
+        try:
+            if os.path.exists(filepath):
+                os.remove(filepath)
+        except Exception:
+            pass
+
+        if result['success']:
+            return jsonify(result)
+        else:
+            return jsonify(result), 400
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@teacher_bp.route('/enter-marks', methods=['GET'])
+@role_required('TEACHER')
+def enter_marks_page():
+    """Manual internal marks entry page"""
+    user = User.query.get(session.get('user_id'))
+    subjects = Subject.query.filter_by(is_active=True).all()
+    students = User.query.filter_by(role='STUDENT', is_active=True).all()
+    
+    exam_types = ['IA1', 'IA2', 'IA3', 'ASSIGNMENT', 'SEE']
+    
+    context = {
+        'user': user,
+        'subjects': subjects,
+        'students': students,
+        'exam_types': exam_types
+    }
+    
+    return render_template('teacher/enter_marks.html', **context)
+
+
+@teacher_bp.route('/enter-marks', methods=['POST'])
+@role_required('TEACHER')
+def enter_marks():
+    """Manually enter internal mark for a student"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'success': False, 'message': 'No data provided'}), 400
+        
+        student_id = data.get('student_id')
+        subject_id = data.get('subject_id')
+        exam_type = data.get('exam_type')
+        marks = data.get('marks')
+        max_marks = data.get('max_marks', 50.0)
+        
+        if not all([student_id, subject_id, exam_type, marks is not None]):
+            return jsonify({'success': False, 'message': 'Missing required fields'}), 400
+            
+        try:
+            marks = float(marks)
+            max_marks = float(max_marks)
+        except ValueError:
+            return jsonify({'success': False, 'message': 'Invalid mark value'}), 400
+            
+        # Check existing
+        existing = InternalMark.query.filter_by(
+            student_id=student_id,
+            subject_id=subject_id,
+            exam_type=exam_type
+        ).first()
+        
+        student = User.query.get(student_id)
+        
+        if existing:
+            existing.marks_obtained = marks
+            existing.max_marks = max_marks
+            existing.uploaded_by = session.get('user_id')
+            existing.uploaded_at = datetime.utcnow()
+            message = f"Marks updated for {student.full_name}"
+        else:
+            mark = InternalMark(
+                student_id=student_id,
+                subject_id=subject_id,
+                exam_type=exam_type,
+                marks_obtained=marks,
+                max_marks=max_marks,
+                semester=student.semester,
+                uploaded_by=session.get('user_id')
+            )
+            db.session.add(mark)
+            message = f"Marks saved for {student.full_name}"
+            
+        db.session.commit()
+        return jsonify({
+            'success': True,
+            'message': message,
+            'student_name': student.full_name
+        })
+            
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@teacher_bp.route('/api/marks', methods=['GET'])
+@role_required('TEACHER')
+def get_marks():
+    """Fetch existing marks for a subject and exam type"""
+    try:
+        subject_id = request.args.get('subject_id')
+        exam_type = request.args.get('exam_type')
+        
+        if not subject_id or not exam_type:
+            return jsonify({'success': False, 'message': 'Missing parameters'}), 400
+            
+        marks = InternalMark.query.filter_by(
+            subject_id=subject_id,
+            exam_type=exam_type
+        ).all()
+        
+        marks_dict = {mark.student_id: mark.marks_obtained for mark in marks}
+        
+        return jsonify({
+            'success': True,
+            'marks': marks_dict
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@teacher_bp.route('/ai-assistant')
+@role_required('TEACHER')
+def ai_assistant():
+    """Teacher AI Assistant Interface"""
+    user = User.query.get(session.get('user_id'))
+    return render_template('teacher/ai_assistant.html', user=user)
