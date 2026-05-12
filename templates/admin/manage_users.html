@@ -277,12 +277,15 @@ function showToast(message, type) {
     const isSuccess = type === 'success';
     el.className = `pointer-events-auto flex items-start gap-3 rounded-xl border px-4 py-3 shadow-lg text-sm font-medium max-w-sm
         ${isSuccess ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`;
+    // Static skeleton — no user-controlled values interpolated into innerHTML
     el.innerHTML = `
         <i data-lucide="${isSuccess ? 'check-circle' : 'alert-circle'}" class="h-4 w-4 mt-0.5 shrink-0"></i>
-        <span class="flex-1">${message}</span>
+        <span class="flex-1 toast-msg"></span>
         <button onclick="this.parentElement.remove()" class="opacity-60 hover:opacity-100 shrink-0">
             <i data-lucide="x" class="h-4 w-4"></i>
         </button>`;
+    // Write message as plain text — never rendered as HTML
+    el.querySelector('.toast-msg').textContent = message;
     area.appendChild(el);
     lucide.createIcons();
     setTimeout(() => el.remove(), 5000);
