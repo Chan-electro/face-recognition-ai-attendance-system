@@ -15,6 +15,59 @@ import base64
 teacher_bp = Blueprint('teacher', __name__, url_prefix='/teacher')
 
 
+# ── Classroom context helpers ───────────────────────────────────────────────
+
+def _get_teacher_classrooms(teacher_id):
+    """Return distinct Classroom objects assigned to this teacher."""
+    from models.teacher_assignment import TeacherAssignment
+    from models.classroom import Classroom
+    rows = (db.session.query(Classroom)
+            .join(TeacherAssignment, TeacherAssignment.classroom_id == Classroom.id)
+            .filter(TeacherAssignment.teacher_id == teacher_id, Classroom.is_active == True)
+            .distinct()
+            .order_by(Classroom.name)
+            .all())
+    return rows
+
+
+def _get_active_classroom(teacher_id):
+    """
+    Return the active Classroom for this teacher session.
+    Falls back to first assigned classroom; returns None if no assignments exist.
+    """
+    from models.classroom import Classroom
+    classrooms = _get_teacher_classrooms(teacher_id)
+    if not classrooms:
+        return None
+    active_id = session.get('active_classroom_id')
+    if active_id:
+        match = next((c for c in classrooms if c.id == active_id), None)
+        if match:
+            return match
+    session['active_classroom_id'] = classrooms[0].id
+    return classrooms[0]
+
+
+def _get_classroom_subjects(teacher_id, classroom_id):
+    """Return Subject objects this teacher teaches in the given classroom."""
+    from models.teacher_assignment import TeacherAssignment
+    rows = (TeacherAssignment.query
+            .filter_by(teacher_id=teacher_id, classroom_id=classroom_id)
+            .all())
+    return [r.subject for r in rows]
+
+
+@teacher_bp.route('/switch-classroom', methods=['POST'])
+@role_required('TEACHER')
+def switch_classroom():
+    teacher_id = session.get('user_id')
+    cls_id = request.form.get('classroom_id', type=int)
+    classrooms = _get_teacher_classrooms(teacher_id)
+    if cls_id and any(c.id == cls_id for c in classrooms):
+        session['active_classroom_id'] = cls_id
+    return redirect(request.referrer or url_for('teacher.dashboard'))
+
+
 @teacher_bp.route('/dashboard')
 @role_required('TEACHER')
 def dashboard():
