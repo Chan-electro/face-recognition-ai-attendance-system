@@ -236,9 +236,10 @@
                     <div class="flex flex-col gap-1.5">
                         <label class="text-sm font-medium text-foreground">Subjects to Teach</label>
                         <p class="text-xs text-muted-foreground -mt-1">Teacher will be assigned these subjects across all active classrooms.</p>
-                        <div class="border border-border rounded-lg max-h-44 overflow-y-auto divide-y divide-border">
+                        <div id="subjectList" class="border border-border rounded-lg max-h-44 overflow-y-auto divide-y divide-border">
                             {% for subject in subjects %}
-                            <label class="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-muted/40 transition-colors">
+                            <label class="subject-item flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-muted/40 transition-colors"
+                                data-department="{{ subject.department or '' }}">
                                 <input type="checkbox" name="subject_ids" value="{{ subject.id }}"
                                     class="h-4 w-4 rounded border-border text-primary focus:ring-primary/50">
                                 <span class="font-mono text-xs font-semibold text-muted-foreground w-14 shrink-0">{{ subject.code }}</span>
@@ -247,6 +248,7 @@
                             {% else %}
                             <p class="px-3 py-4 text-sm text-muted-foreground text-center">No subjects found. Add subjects first.</p>
                             {% endfor %}
+                            <p id="noSubjectsMsg" class="hidden px-3 py-4 text-sm text-muted-foreground text-center">No subjects available for this school.</p>
                         </div>
                     </div>
                 </div>
@@ -335,6 +337,7 @@ function showToast(message, type) {
 function openModal() {
     document.getElementById('addUserForm').reset();
     toggleRoleFields();
+    filterSubjectsBySchool();
     document.getElementById('addUserModal').classList.remove('hidden');
     lucide.createIcons();
 }
@@ -357,6 +360,44 @@ function toggleRoleFields() {
 }
 
 document.getElementById('roleSelect').addEventListener('change', toggleRoleFields);
+
+// ── Subject filtering by School ────────────────────────────────────────────
+// Maps school dropdown value → keywords that must appear in subject.department
+const SCHOOL_DEPT_KEYWORDS = {
+    'School of Computer Science and Engineering': ['computer science', 'computer'],
+    'School of Electronics and Communication':   ['electronics', 'ece', 'communication'],
+    'School of Mechanical Engineering':          ['mechanical'],
+    'School of Civil Engineering':               ['civil'],
+    'School of Electrical Engineering':          ['electrical'],
+    'School of Information Technology':          ['information technology', 'it'],
+    'School of Applied Sciences':                ['applied sciences', 'physics', 'chemistry', 'mathematics', 'maths'],
+    'School of Engineering and Technology':      [], // show all
+};
+
+function filterSubjectsBySchool() {
+    const school = document.getElementById('schoolSelect').value;
+    const keywords = SCHOOL_DEPT_KEYWORDS[school] ?? null;
+    const items = document.querySelectorAll('.subject-item');
+    let visibleCount = 0;
+
+    items.forEach(label => {
+        const dept = (label.dataset.department || '').toLowerCase();
+        // If no school selected, or school maps to [] (show all), show everything
+        const visible = !school || !keywords || keywords.length === 0 ||
+                        keywords.some(kw => dept.includes(kw));
+        label.style.display = visible ? '' : 'none';
+        if (!visible) {
+            // Uncheck hidden subjects so they aren't submitted
+            label.querySelector('input[type="checkbox"]').checked = false;
+        } else {
+            visibleCount++;
+        }
+    });
+
+    document.getElementById('noSubjectsMsg').classList.toggle('hidden', visibleCount > 0 || items.length === 0);
+}
+
+document.getElementById('schoolSelect').addEventListener('change', filterSubjectsBySchool);
 
 // Auto-fill semester/section from classroom selection
 document.getElementById('classroomSelect').addEventListener('change', function() {
