@@ -45,22 +45,20 @@ def dashboard():
 @role_required('ADMIN')
 def manage_users():
     """Manage users"""
+    from models.classroom import Classroom
     user = User.query.get(session.get('user_id'))
-    
-    # Get filter
     role_filter = request.args.get('role', 'all')
-    
     if role_filter == 'all':
         users = User.query.all()
     else:
         users = User.query.filter_by(role=role_filter.upper()).all()
-    
+    classrooms = Classroom.query.filter_by(is_active=True).order_by(Classroom.name).all()
     context = {
         'user': user,
         'users': users,
-        'role_filter': role_filter
+        'role_filter': role_filter,
+        'classrooms': classrooms,
     }
-    
     return render_template('admin/manage_users.html', **context)
 
 
@@ -119,6 +117,9 @@ def add_user():
                 flash(msg, 'danger')
                 return redirect(url_for('admin.manage_users'))
 
+        classroom_id_raw = data.get('classroom_id')
+        classroom_id = int(classroom_id_raw) if role.upper() == 'STUDENT' and classroom_id_raw else None
+
         # Create user
         new_user = User(
             username=username,
@@ -128,12 +129,22 @@ def add_user():
             student_id=student_id if role.upper() == 'STUDENT' else None,
             department=department if department else None,
             semester=semester if role.upper() == 'STUDENT' else None,
-            section=section if role.upper() == 'STUDENT' and section else None
+            section=section if role.upper() == 'STUDENT' and section else None,
+            classroom_id=classroom_id,
         )
         new_user.set_password(password)
 
         db.session.add(new_user)
         db.session.commit()
+
+        # Sync semester/section from classroom if assigned
+        if new_user.role == 'STUDENT' and new_user.classroom_id:
+            from models.classroom import Classroom
+            cls = Classroom.query.get(new_user.classroom_id)
+            if cls:
+                new_user.semester = cls.semester
+                new_user.section  = cls.section
+                db.session.commit()
 
         msg = f'User {full_name} added successfully'
         if is_ajax:
@@ -537,4 +548,163 @@ def upload_excel():
         return jsonify(result)
 
     except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+# ─── Classroom management ────────────────────────────────────────────────────
+
+@admin_bp.route('/classrooms')
+@role_required('ADMIN')
+def manage_classrooms():
+    from models.classroom import Classroom
+    from models.teacher_assignment import TeacherAssignment
+    user = User.query.get(session.get('user_id'))
+    classrooms = Classroom.query.order_by(Classroom.semester, Classroom.section).all()
+    classroom_data = []
+    for c in classrooms:
+        teacher_count = db.session.query(
+            db.func.count(db.func.distinct(TeacherAssignment.teacher_id))
+        ).filter_by(classroom_id=c.id).scalar() or 0
+        classroom_data.append({
+            'classroom': c,
+            'student_count': c.students.filter_by(is_active=True).count(),
+            'teacher_count': teacher_count,
+        })
+    return render_template('admin/manage_classrooms.html',
+                           user=user, classroom_data=classroom_data)
+
+
+@admin_bp.route('/classrooms/add', methods=['POST'])
+@role_required('ADMIN')
+def add_classroom():
+    from models.classroom import Classroom
+    try:
+        data = request.get_json() if request.is_json else request.form
+        name          = str(data.get('name', '')).strip()
+        semester      = data.get('semester')
+        section       = str(data.get('section', '')).strip().upper()
+        department    = str(data.get('department', '')).strip()
+        academic_year = str(data.get('academic_year', '')).strip()
+
+        if not all([name, semester, section, department]):
+            return jsonify({'success': False, 'message': 'Name, semester, section and department are required'}), 400
+
+        cls = Classroom(name=name, semester=int(semester), section=section,
+                        department=department, academic_year=academic_year or None)
+        db.session.add(cls)
+        db.session.commit()
+        return jsonify({'success': True, 'message': f'Classroom "{name}" created', 'classroom': cls.to_dict()})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@admin_bp.route('/classrooms/<int:cls_id>/delete', methods=['POST'])
+@role_required('ADMIN')
+def delete_classroom(cls_id):
+    from models.classroom import Classroom
+    try:
+        cls = Classroom.query.get(cls_id)
+        if not cls:
+            return jsonify({'success': False, 'message': 'Classroom not found'}), 404
+        cls.is_active = False
+        db.session.commit()
+        return jsonify({'success': True, 'message': f'Classroom "{cls.name}" deactivated'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@admin_bp.route('/classrooms/<int:cls_id>')
+@role_required('ADMIN')
+def classroom_detail(cls_id):
+    from models.classroom import Classroom
+    from models.teacher_assignment import TeacherAssignment
+    user = User.query.get(session.get('user_id'))
+    cls = Classroom.query.get_or_404(cls_id)
+    students    = cls.students.filter_by(is_active=True).order_by(User.full_name).all()
+    unassigned  = User.query.filter_by(role='STUDENT', is_active=True, classroom_id=None).order_by(User.full_name).all()
+    assignments = TeacherAssignment.query.filter_by(classroom_id=cls_id).all()
+    teachers    = User.query.filter_by(role='TEACHER', is_active=True).order_by(User.full_name).all()
+    subjects    = Subject.query.filter_by(is_active=True).order_by(Subject.code).all()
+    return render_template('admin/classroom_detail.html',
+                           user=user, cls=cls, students=students,
+                           unassigned=unassigned, assignments=assignments,
+                           teachers=teachers, subjects=subjects)
+
+
+@admin_bp.route('/classrooms/<int:cls_id>/add-student', methods=['POST'])
+@role_required('ADMIN')
+def classroom_add_student(cls_id):
+    from models.classroom import Classroom
+    try:
+        data       = request.get_json()
+        student_id = data.get('student_id')
+        student    = User.query.filter_by(id=student_id, role='STUDENT', is_active=True).first()
+        cls        = Classroom.query.get(cls_id)
+        if not student or not cls:
+            return jsonify({'success': False, 'message': 'Student or classroom not found'}), 404
+        student.classroom_id = cls_id
+        student.semester     = cls.semester
+        student.section      = cls.section
+        db.session.commit()
+        return jsonify({'success': True,
+                        'message': f'{student.full_name} added to {cls.name}',
+                        'student': student.to_dict()})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@admin_bp.route('/classrooms/<int:cls_id>/remove-student', methods=['POST'])
+@role_required('ADMIN')
+def classroom_remove_student(cls_id):
+    try:
+        data       = request.get_json()
+        student_id = data.get('student_id')
+        student    = User.query.filter_by(id=student_id, role='STUDENT').first()
+        if not student:
+            return jsonify({'success': False, 'message': 'Student not found'}), 404
+        student.classroom_id = None
+        db.session.commit()
+        return jsonify({'success': True, 'message': f'{student.full_name} removed from classroom'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@admin_bp.route('/classrooms/<int:cls_id>/add-assignment', methods=['POST'])
+@role_required('ADMIN')
+def classroom_add_assignment(cls_id):
+    from models.teacher_assignment import TeacherAssignment
+    try:
+        data       = request.get_json()
+        teacher_id = int(data.get('teacher_id'))
+        subject_id = int(data.get('subject_id'))
+        existing   = TeacherAssignment.query.filter_by(
+            teacher_id=teacher_id, classroom_id=cls_id, subject_id=subject_id).first()
+        if existing:
+            return jsonify({'success': False, 'message': 'Assignment already exists'}), 400
+        ta = TeacherAssignment(teacher_id=teacher_id, classroom_id=cls_id, subject_id=subject_id)
+        db.session.add(ta)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Assignment added', 'assignment': ta.to_dict()})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@admin_bp.route('/classrooms/assignments/<int:assignment_id>/delete', methods=['POST'])
+@role_required('ADMIN')
+def delete_assignment(assignment_id):
+    from models.teacher_assignment import TeacherAssignment
+    try:
+        ta = TeacherAssignment.query.get(assignment_id)
+        if not ta:
+            return jsonify({'success': False, 'message': 'Assignment not found'}), 404
+        db.session.delete(ta)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Assignment removed'})
+    except Exception as e:
+        db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
