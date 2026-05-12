@@ -38,6 +38,32 @@ def create_app(config_name='development'):
     app.register_blueprint(admin_bp)
     app.register_blueprint(ai_bp)
     app.register_blueprint(attendance_bp)
+
+    @app.context_processor
+    def inject_teacher_classrooms():
+        from flask import session as _session
+        role = _session.get('role')
+        if role != 'TEACHER':
+            return {}
+        teacher_id = _session.get('user_id')
+        if not teacher_id:
+            return {}
+        try:
+            from models.teacher_assignment import TeacherAssignment
+            from models.classroom import Classroom
+            classrooms = (db.session.query(Classroom)
+                          .join(TeacherAssignment, TeacherAssignment.classroom_id == Classroom.id)
+                          .filter(TeacherAssignment.teacher_id == teacher_id, Classroom.is_active == True)
+                          .distinct()
+                          .order_by(Classroom.name)
+                          .all())
+            active_id = _session.get('active_classroom_id')
+            if classrooms and not active_id:
+                active_id = classrooms[0].id
+                _session['active_classroom_id'] = active_id
+            return {'teacher_classrooms': classrooms, 'active_classroom_id': active_id}
+        except Exception:
+            return {}
     
     # Create database tables
     with app.app_context():
