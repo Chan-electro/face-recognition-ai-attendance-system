@@ -54,6 +54,17 @@ def create_app(config_name='development'):
                     print("Migration: added 'section' column to users table")
         except Exception as e:
             print(f"Migration check: {e}")
+        # Migrate: add 'classroom_id' column to users if missing
+        try:
+            with db.engine.connect() as conn:
+                result = conn.execute(text("PRAGMA table_info(users)"))
+                columns = [row[1] for row in result]
+                if 'classroom_id' not in columns:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN classroom_id INTEGER REFERENCES classrooms(id)"))
+                    conn.commit()
+                    print("Migration: added 'classroom_id' column to users table")
+        except Exception as e:
+            print(f"Migration check (classroom_id): {e}")
         seed_database(app)
     
     # Initialize AI service (RAG agent backed by OpenRouter)
