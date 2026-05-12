@@ -204,11 +204,51 @@
                     </div>
                 </div>
 
-                <!-- Department -->
-                <div class="flex flex-col gap-1.5">
+                <!-- Department (non-teacher roles) -->
+                <div id="deptField" class="flex flex-col gap-1.5">
                     <label class="text-sm font-medium text-foreground">Department</label>
                     <input type="text" name="department" placeholder="e.g. Computer Science"
                         class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
+                </div>
+
+                <!-- Teacher-only fields -->
+                <div id="teacherFields" class="hidden flex-col gap-3 pt-3 border-t border-border">
+                    <p class="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Teacher Details</p>
+
+                    <!-- School of Engineering -->
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-sm font-medium text-foreground">School of Engineering <span class="text-red-500">*</span></label>
+                        <select name="department" id="schoolSelect"
+                            class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
+                            <option value="">— Select School —</option>
+                            <option value="School of Engineering and Technology">School of Engineering and Technology</option>
+                            <option value="School of Computer Science and Engineering">School of Computer Science and Engineering</option>
+                            <option value="School of Electronics and Communication">School of Electronics and Communication</option>
+                            <option value="School of Mechanical Engineering">School of Mechanical Engineering</option>
+                            <option value="School of Civil Engineering">School of Civil Engineering</option>
+                            <option value="School of Electrical Engineering">School of Electrical Engineering</option>
+                            <option value="School of Information Technology">School of Information Technology</option>
+                            <option value="School of Applied Sciences">School of Applied Sciences</option>
+                        </select>
+                    </div>
+
+                    <!-- Subject assignment -->
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-sm font-medium text-foreground">Subjects to Teach</label>
+                        <p class="text-xs text-muted-foreground -mt-1">Teacher will be assigned these subjects across all active classrooms.</p>
+                        <div class="border border-border rounded-lg max-h-44 overflow-y-auto divide-y divide-border">
+                            {% for subject in subjects %}
+                            <label class="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-muted/40 transition-colors">
+                                <input type="checkbox" name="subject_ids" value="{{ subject.id }}"
+                                    class="h-4 w-4 rounded border-border text-primary focus:ring-primary/50">
+                                <span class="font-mono text-xs font-semibold text-muted-foreground w-14 shrink-0">{{ subject.code }}</span>
+                                <span class="text-sm text-foreground">{{ subject.name }}</span>
+                            </label>
+                            {% else %}
+                            <p class="px-3 py-4 text-sm text-muted-foreground text-center">No subjects found. Add subjects first.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Student-only fields -->
@@ -294,7 +334,7 @@ function showToast(message, type) {
 // ── Modal open/close ───────────────────────────────────────────────────────
 function openModal() {
     document.getElementById('addUserForm').reset();
-    toggleStudentFields();
+    toggleRoleFields();
     document.getElementById('addUserModal').classList.remove('hidden');
     lucide.createIcons();
 }
@@ -308,14 +348,15 @@ document.getElementById('addUserModal').addEventListener('click', function(e) {
     if (e.target === this) closeModal();
 });
 
-// ── Role / student fields ─────────────────────────────────────────────────
-function toggleStudentFields() {
+// ── Role-based field visibility ───────────────────────────────────────────
+function toggleRoleFields() {
     const role = document.getElementById('roleSelect').value;
-    const sf = document.getElementById('studentFields');
-    sf.style.display = role === 'STUDENT' ? 'flex' : 'none';
+    document.getElementById('studentFields').style.display  = role === 'STUDENT' ? 'flex' : 'none';
+    document.getElementById('teacherFields').style.display  = role === 'TEACHER' ? 'flex' : 'none';
+    document.getElementById('deptField').style.display      = role !== 'TEACHER' ? 'flex' : 'none';
 }
 
-document.getElementById('roleSelect').addEventListener('change', toggleStudentFields);
+document.getElementById('roleSelect').addEventListener('change', toggleRoleFields);
 
 // Auto-fill semester/section from classroom selection
 document.getElementById('classroomSelect').addEventListener('change', function() {
@@ -343,9 +384,14 @@ async function submitUser() {
         }
     }
 
-    // Collect form data
+    // Collect form data (skip checkboxes — handled separately)
     const data = {};
-    new FormData(form).forEach((v, k) => { data[k] = v; });
+    new FormData(form).forEach((v, k) => {
+        if (k !== 'subject_ids') data[k] = v;
+    });
+    // Collect all checked subject IDs as an array
+    data.subject_ids = [...form.querySelectorAll('input[name="subject_ids"]:checked')]
+                           .map(cb => parseInt(cb.value));
 
     // Loading state
     btn.disabled = true;
@@ -393,6 +439,6 @@ async function deleteUser(userId, userName) {
 }
 
 // Run on load — set correct initial visibility
-toggleStudentFields();
+toggleRoleFields();
 </script>
 {% endblock %}

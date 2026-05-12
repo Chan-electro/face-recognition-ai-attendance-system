@@ -53,11 +53,13 @@ def manage_users():
     else:
         users = User.query.filter_by(role=role_filter.upper()).all()
     classrooms = Classroom.query.filter_by(is_active=True).order_by(Classroom.name).all()
+    subjects   = Subject.query.filter_by(is_active=True).order_by(Subject.code).all()
     context = {
         'user': user,
         'users': users,
         'role_filter': role_filter,
         'classrooms': classrooms,
+        'subjects': subjects,
     }
     return render_template('admin/manage_users.html', **context)
 
@@ -144,6 +146,36 @@ def add_user():
             if cls:
                 new_user.semester = cls.semester
                 new_user.section  = cls.section
+                db.session.commit()
+
+        # Create teacher-subject assignments across all active classrooms
+        if new_user.role == 'TEACHER':
+            raw_ids = data.get('subject_ids', [])
+            if isinstance(raw_ids, (str, int)):
+                raw_ids = [raw_ids]
+            subject_ids = []
+            for sid in raw_ids:
+                try:
+                    subject_ids.append(int(sid))
+                except (ValueError, TypeError):
+                    pass
+            if subject_ids:
+                from models.teacher_assignment import TeacherAssignment
+                from models.classroom import Classroom
+                classrooms = Classroom.query.filter_by(is_active=True).all()
+                for cls in classrooms:
+                    for sid in subject_ids:
+                        exists = TeacherAssignment.query.filter_by(
+                            teacher_id=new_user.id,
+                            classroom_id=cls.id,
+                            subject_id=sid
+                        ).first()
+                        if not exists:
+                            db.session.add(TeacherAssignment(
+                                teacher_id=new_user.id,
+                                classroom_id=cls.id,
+                                subject_id=sid
+                            ))
                 db.session.commit()
 
         msg = f'User {full_name} added successfully'
