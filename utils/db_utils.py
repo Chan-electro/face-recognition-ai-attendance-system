@@ -225,6 +225,112 @@ def _student_name(idx):
     return f"{first[idx % len(first)]} {last[idx % len(last)]}"
 
 
+def seed_subjects_if_missing(app):
+    """Add subjects for all engineering departments if they are not already in the DB.
+    Safe to call on an existing database — uses subject code as idempotency key."""
+    with app.app_context():
+        from models import db
+        from models.subject import Subject
+
+        # (code, name, description, credits, semester, department)
+        all_subjects = [
+            # ── Computer Science (8th sem additions) ────────────────
+            ('CS801', 'Machine Learning',
+             'Supervised, unsupervised learning, neural networks', 4, 8, 'Computer Science'),
+            ('CS802', 'Cloud Computing',
+             'Cloud architecture, AWS, Azure, containerisation', 4, 8, 'Computer Science'),
+            ('CS803', 'Cyber Security',
+             'Network security, cryptography, ethical hacking basics', 3, 8, 'Computer Science'),
+            ('CS804', 'Deep Learning',
+             'CNNs, RNNs, transformers, model training strategies', 4, 8, 'Computer Science'),
+
+            # ── Electronics and Communication ────────────────────────
+            ('EC501', 'Analog Electronics',
+             'BJT, MOSFET amplifiers, feedback, oscillators', 4, 5, 'Electronics and Communication'),
+            ('EC502', 'Digital Signal Processing',
+             'DFT, FFT, FIR/IIR filters, Z-transform', 4, 5, 'Electronics and Communication'),
+            ('EC503', 'Communication Systems',
+             'AM/FM modulation, noise analysis, digital communication', 4, 5, 'Electronics and Communication'),
+            ('EC504', 'VLSI Design',
+             'CMOS design, logic synthesis, layout fundamentals', 3, 6, 'Electronics and Communication'),
+            ('EC505', 'Microprocessors and Embedded Systems',
+             '8051, ARM architecture, interfacing, RTOS basics', 4, 6, 'Electronics and Communication'),
+
+            # ── Mechanical Engineering ───────────────────────────────
+            ('ME501', 'Thermodynamics',
+             'Laws of thermodynamics, cycles, heat engines', 4, 5, 'Mechanical Engineering'),
+            ('ME502', 'Fluid Mechanics',
+             'Fluid statics, Bernoulli, viscous flow, turbomachinery', 4, 5, 'Mechanical Engineering'),
+            ('ME503', 'Manufacturing Technology',
+             'Casting, welding, machining, CNC, additive manufacturing', 4, 5, 'Mechanical Engineering'),
+            ('ME504', 'Machine Design',
+             'Design of shafts, gears, bearings, springs', 4, 6, 'Mechanical Engineering'),
+            ('ME505', 'Heat and Mass Transfer',
+             'Conduction, convection, radiation, mass transfer principles', 4, 6, 'Mechanical Engineering'),
+
+            # ── Civil Engineering ────────────────────────────────────
+            ('CE501', 'Structural Analysis',
+             'Beams, trusses, frames, influence lines, matrix methods', 4, 5, 'Civil Engineering'),
+            ('CE502', 'Geotechnical Engineering',
+             'Soil classification, shear strength, foundation design', 4, 5, 'Civil Engineering'),
+            ('CE503', 'Hydraulics and Fluid Mechanics',
+             'Open channel flow, pipe networks, hydraulic machinery', 4, 5, 'Civil Engineering'),
+            ('CE504', 'Transportation Engineering',
+             'Highway design, traffic engineering, pavement design', 3, 6, 'Civil Engineering'),
+            ('CE505', 'Environmental Engineering',
+             'Water treatment, waste management, air quality control', 3, 6, 'Civil Engineering'),
+
+            # ── Electrical Engineering ───────────────────────────────
+            ('EE501', 'Power Systems',
+             'Generation, transmission, distribution, load flow analysis', 4, 5, 'Electrical Engineering'),
+            ('EE502', 'Control Systems',
+             'Transfer functions, root locus, Bode plots, PID control', 4, 5, 'Electrical Engineering'),
+            ('EE503', 'Electrical Machines',
+             'DC machines, induction motors, synchronous machines', 4, 5, 'Electrical Engineering'),
+            ('EE504', 'Power Electronics',
+             'Rectifiers, inverters, choppers, AC drives', 4, 6, 'Electrical Engineering'),
+            ('EE505', 'High Voltage Engineering',
+             'Breakdown phenomena, insulation, surge protection', 3, 7, 'Electrical Engineering'),
+
+            # ── Information Technology ───────────────────────────────
+            ('IT501', 'Information Security',
+             'Cryptography, PKI, network hardening, compliance', 4, 5, 'Information Technology'),
+            ('IT502', 'Cloud and Distributed Computing',
+             'Distributed systems, microservices, serverless, DevOps', 4, 5, 'Information Technology'),
+            ('IT503', 'Big Data Analytics',
+             'Hadoop, Spark, NoSQL, data pipelines, visualisation', 4, 5, 'Information Technology'),
+            ('IT504', 'Internet of Things',
+             'Sensors, protocols (MQTT/CoAP), edge computing', 3, 6, 'Information Technology'),
+            ('IT505', 'Mobile Application Development',
+             'Android/iOS, React Native, Flutter, REST integration', 3, 6, 'Information Technology'),
+
+            # ── Applied Sciences ─────────────────────────────────────
+            ('AS501', 'Engineering Mathematics',
+             'Differential equations, Laplace transforms, Fourier series', 4, 1, 'Applied Sciences'),
+            ('AS502', 'Engineering Physics',
+             'Optics, quantum mechanics, semiconductors', 4, 1, 'Applied Sciences'),
+            ('AS503', 'Engineering Chemistry',
+             'Corrosion, polymers, water chemistry, fuels', 4, 1, 'Applied Sciences'),
+            ('AS504', 'Probability and Statistics',
+             'Random variables, distributions, hypothesis testing', 4, 2, 'Applied Sciences'),
+            ('AS505', 'Numerical Methods',
+             'Root finding, interpolation, numerical integration/ODE', 3, 3, 'Applied Sciences'),
+        ]
+
+        added = 0
+        for code, name, desc, credits, sem, dept in all_subjects:
+            if not Subject.query.filter_by(code=code).first():
+                db.session.add(Subject(code=code, name=name, description=desc,
+                                       credits=credits, semester=sem, department=dept))
+                added += 1
+
+        if added:
+            db.session.commit()
+            print(f"seed_subjects_if_missing: added {added} new subject(s).")
+        else:
+            print("seed_subjects_if_missing: all subjects already present.")
+
+
 def reset_database(app):
     """Reset database (drop all tables and recreate)"""
     from models import db

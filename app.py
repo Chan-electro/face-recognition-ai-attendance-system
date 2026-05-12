@@ -1,7 +1,7 @@
 from flask import Flask
 from config import config
 from models import db
-from utils.db_utils import init_database, seed_database
+from utils.db_utils import init_database, seed_database, seed_subjects_if_missing
 import os
 
 
@@ -92,7 +92,8 @@ def create_app(config_name='development'):
         except Exception as e:
             print(f"Migration check (classroom_id): {e}")
         seed_database(app)
-    
+        seed_subjects_if_missing(app)
+
     # Initialize AI service (RAG agent backed by OpenRouter)
     from services.ai_service import get_ai_service
     with app.app_context():
