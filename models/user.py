@@ -17,7 +17,8 @@ class User(db.Model):
     student_id = db.Column(db.String(20), unique=True, nullable=True)  # For students only
     department = db.Column(db.String(100), nullable=True)
     semester = db.Column(db.Integer, nullable=True)  # For students
-    section = db.Column(db.String(10), nullable=True)  # For students (A, B, C, etc.)
+    section      = db.Column(db.String(10), nullable=True)  # For students (A, B, C, etc.)
+    classroom_id = db.Column(db.Integer, db.ForeignKey('classrooms.id'), nullable=True, index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)

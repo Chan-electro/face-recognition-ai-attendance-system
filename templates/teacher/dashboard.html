@@ -4,12 +4,22 @@
 
 {% block content %}
 <div class="flex flex-col gap-6">
-    <div>
-        <h1 class="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <i data-lucide="layout-dashboard" class="h-8 w-8 text-primary"></i>
-            Teacher Dashboard
-        </h1>
-        <p class="text-muted-foreground mt-1">Welcome back, {{ user.full_name }}. Here is your daily overview.</p>
+    <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-3 flex-wrap">
+            <h1 class="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                <i data-lucide="layout-dashboard" class="h-8 w-8 text-primary"></i>
+                Teacher Dashboard
+            </h1>
+            {% if active_cls %}
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-primary/10 text-primary">
+                <i data-lucide="layout-grid" class="h-3.5 w-3.5"></i>
+                {{ active_cls.name }}
+            </span>
+            {% endif %}
+        </div>
+        <p class="text-muted-foreground mt-1">Welcome back, {{ user.full_name }}.
+            {% if active_cls %}Showing data for <span class="font-medium text-foreground">{{ active_cls.name }}</span>.{% endif %}
+        </p>
     </div>
 
     <!-- Stats Cards -->

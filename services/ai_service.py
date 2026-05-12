@@ -571,15 +571,24 @@ class OpenRouterClient:
                 "category":   "error"
             }
         except requests.exceptions.HTTPError as e:
-            status = e.response.status_code if e.response else 0
+            status = e.response.status_code if e.response is not None else 0
             try:
                 err_body = e.response.json()
-                msg = err_body.get("error", {}).get("message", str(e))
+                msg = err_body.get("error", {}).get("metadata", {}).get("raw")
+                if not msg:
+                    msg = err_body.get("error", {}).get("message", str(e))
             except Exception:
                 msg = str(e)
             print(f"[RAG] OpenRouter HTTP {status}: {msg}")
+            
+            # User-friendly message for rate limits
+            if status == 429:
+                display_msg = "The free AI model is currently overloaded or rate-limited. Please try again in a few minutes."
+            else:
+                display_msg = f"AI service error ({status}): {msg}"
+
             return {
-                "answer":     f"AI service error ({status}): {msg}",
+                "answer":     display_msg,
                 "confidence": 0.0,
                 "category":   "error"
             }

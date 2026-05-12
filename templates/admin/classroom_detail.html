@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}{{ cls.name }} - Classroom Detail{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-6">
+
+    <!-- Header -->
+    <div class="flex justify-between items-start flex-wrap gap-4">
+        <div>
+            <div class="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                <a href="{{ url_for('admin.manage_classrooms') }}" class="hover:text-foreground transition-colors">Classrooms</a>
+                <i data-lucide="chevron-right" class="h-4 w-4"></i>
+                <span>{{ cls.name }}</span>
+            </div>
+            <h1 class="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                <i data-lucide="layout-grid" class="h-8 w-8 text-primary"></i>
+                {{ cls.name }}
+            </h1>
+            <p class="text-muted-foreground mt-1">
+                {{ cls.department }} &bull; Semester {{ cls.semester }}, Section {{ cls.section }}
+                {% if cls.academic_year %}&bull; {{ cls.academic_year }}{% endif %}
+            </p>
+        </div>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
+            {% if cls.is_active %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-600{% endif %}">
+            <i data-lucide="{% if cls.is_active %}check-circle{% else %}x-circle{% endif %}" class="h-4 w-4"></i>
+            {% if cls.is_active %}Active{% else %}Inactive{% endif %}
+        </span>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div class="shadcn-card p-4">
+            <div class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Students</div>
+            <div class="text-2xl font-bold text-foreground mt-1">{{ students | length }}</div>
+        </div>
+        <div class="shadcn-card p-4">
+            <div class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Teacher Assignments</div>
+            <div class="text-2xl font-bold text-primary mt-1">{{ assignments | length }}</div>
+        </div>
+        <div class="shadcn-card p-4">
+            <div class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Unassigned Students</div>
+            <div class="text-2xl font-bold text-amber-600 mt-1">{{ unassigned | length }}</div>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flex flex-col gap-2">
+        {% for category, message in messages %}
+        <div class="rounded-lg px-4 py-3 text-sm font-medium
+            {% if category == 'success' %}bg-green-50 text-green-800 border border-green-200
+            {% elif category == 'danger' %}bg-red-50 text-red-800 border border-red-200
+            {% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Students Panel -->
+        <div class="shadcn-card flex flex-col gap-0 overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-border">
+                <h2 class="text-base font-semibold text-foreground flex items-center gap-2">
+                    <i data-lucide="users" class="h-4 w-4 text-primary"></i>
+                    Students ({{ students | length }})
+                </h2>
+                {% if unassigned %}
+                <button onclick="document.getElementById('addStudentModal').classList.remove('hidden')"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+                    <i data-lucide="user-plus" class="h-3.5 w-3.5"></i> Add Student
+                </button>
+                {% endif %}
+            </div>
+            <div class="divide-y divide-border max-h-96 overflow-y-auto">
+                {% for student in students %}
+                <div class="flex items-center justify-between px-6 py-3 hover:bg-muted/30 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="h-8 w-8 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                            {{ student.full_name[:1].upper() }}
+                        </div>
+                        <div>
+                            <div class="text-sm font-medium text-foreground">{{ student.full_name }}</div>
+                            <div class="text-xs text-muted-foreground">{{ student.student_id or student.username }}</div>
+                        </div>
+                    </div>
+                    <button onclick="removeStudent({{ student.id }}, '{{ student.full_name }}')"
+                            class="text-red-500 hover:text-red-700 transition-colors p-1 rounded">
+                        <i data-lucide="user-x" class="h-4 w-4"></i>
+                    </button>
+                </div>
+                {% else %}
+                <div class="px-6 py-8 text-center text-muted-foreground">
+                    <i data-lucide="users" class="h-8 w-8 mx-auto mb-2 opacity-40"></i>
+                    <p class="text-sm">No students assigned yet.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Teacher Assignments Panel -->
+        <div class="shadcn-card flex flex-col gap-0 overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-border">
+                <h2 class="text-base font-semibold text-foreground flex items-center gap-2">
+                    <i data-lucide="graduation-cap" class="h-4 w-4 text-primary"></i>
+                    Teacher Assignments ({{ assignments | length }})
+                </h2>
+                <button onclick="document.getElementById('addAssignmentModal').classList.remove('hidden')"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+                    <i data-lucide="plus" class="h-3.5 w-3.5"></i> Assign Teacher
+                </button>
+            </div>
+            <div class="divide-y divide-border max-h-96 overflow-y-auto">
+                {% for ta in assignments %}
+                <div class="flex items-center justify-between px-6 py-3 hover:bg-muted/30 transition-colors">
+                    <div class="flex flex-col gap-0.5">
+                        <div class="text-sm font-medium text-foreground">{{ ta.teacher.full_name }}</div>
+                        <div class="text-xs text-muted-foreground flex items-center gap-1">
+                            <i data-lucide="book-open" class="h-3 w-3"></i>
+                            {{ ta.subject.code }} &mdash; {{ ta.subject.name }}
+                        </div>
+                    </div>
+                    <button onclick="removeAssignment({{ ta.id }})"
+                            class="text-red-500 hover:text-red-700 transition-colors p-1 rounded">
+                        <i data-lucide="x" class="h-4 w-4"></i>
+                    </button>
+                </div>
+                {% else %}
+                <div class="px-6 py-8 text-center text-muted-foreground">
+                    <i data-lucide="graduation-cap" class="h-8 w-8 mx-auto mb-2 opacity-40"></i>
+                    <p class="text-sm">No teachers assigned yet.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Add Student Modal -->
+<div id="addStudentModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div class="bg-background rounded-xl shadow-2xl w-full max-w-sm border border-border">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-border">
+            <h2 class="text-lg font-semibold text-foreground flex items-center gap-2">
+                <i data-lucide="user-plus" class="h-5 w-5 text-primary"></i>
+                Add Student to {{ cls.name }}
+            </h2>
+            <button onclick="document.getElementById('addStudentModal').classList.add('hidden')"
+                    class="text-muted-foreground hover:text-foreground">
+                <i data-lucide="x" class="h-5 w-5"></i>
+            </button>
+        </div>
+        <div class="p-6 flex flex-col gap-4">
+            <div>
+                <label class="block text-sm font-medium text-foreground mb-1.5">Select Student</label>
+                <select id="studentSelect"
+                        class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
+                    <option value="">— Choose a student —</option>
+                    {% for s in unassigned %}
+                    <option value="{{ s.id }}">{{ s.full_name }} ({{ s.student_id or s.username }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button type="button"
+                        onclick="document.getElementById('addStudentModal').classList.add('hidden')"
+                        class="px-4 py-2 rounded-lg text-sm font-medium border border-border text-foreground hover:bg-muted transition-colors">
+                    Cancel
+                </button>
+                <button type="button" onclick="addStudent()"
+                        class="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+                    Add
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Assignment Modal -->
+<div id="addAssignmentModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div class="bg-background rounded-xl shadow-2xl w-full max-w-sm border border-border">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-border">
+            <h2 class="text-lg font-semibold text-foreground flex items-center gap-2">
+                <i data-lucide="graduation-cap" class="h-5 w-5 text-primary"></i>
+                Assign Teacher
+            </h2>
+            <button onclick="document.getElementById('addAssignmentModal').classList.add('hidden')"
+                    class="text-muted-foreground hover:text-foreground">
+                <i data-lucide="x" class="h-5 w-5"></i>
+            </button>
+        </div>
+        <div class="p-6 flex flex-col gap-4">
+            <div>
+                <label class="block text-sm font-medium text-foreground mb-1.5">Teacher</label>
+                <select id="teacherSelect"
+                        class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
+                    <option value="">— Choose a teacher —</option>
+                    {% for t in teachers %}
+                    <option value="{{ t.id }}">{{ t.full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-foreground mb-1.5">Subject</label>
+                <select id="subjectSelect"
+                        class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
+                    <option value="">— Choose a subject —</option>
+                    {% for s in subjects %}
+                    <option value="{{ s.id }}">{{ s.code }} — {{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button type="button"
+                        onclick="document.getElementById('addAssignmentModal').classList.add('hidden')"
+                        class="px-4 py-2 rounded-lg text-sm font-medium border border-border text-foreground hover:bg-muted transition-colors">
+                    Cancel
+                </button>
+                <button type="button" onclick="addAssignment()"
+                        class="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+                    Assign
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const CLS_ID = {{ cls.id }};
+
+async function apiPost(url, body) {
+    const resp = await fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(body)
+    });
+    return resp.json();
+}
+
+function showToast(msg, ok) {
+    const d = document.createElement('div');
+    d.textContent = msg;
+    d.className = `fixed bottom-4 right-4 z-[9999] px-4 py-3 rounded-lg text-sm font-medium shadow-lg transition-all
+        ${ok ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`;
+    document.body.appendChild(d);
+    setTimeout(() => d.remove(), 3000);
+}
+
+async function addStudent() {
+    const id = document.getElementById('studentSelect').value;
+    if (!id) return alert('Please select a student');
+    const data = await apiPost(`/admin/classrooms/${CLS_ID}/add-student`, {student_id: parseInt(id)});
+    if (data.success) {
+        showToast(data.message, true);
+        setTimeout(() => location.reload(), 800);
+    } else {
+        showToast(data.message, false);
+    }
+}
+
+async function removeStudent(studentId, name) {
+    if (!confirm(`Remove ${name} from this classroom?`)) return;
+    const data = await apiPost(`/admin/classrooms/${CLS_ID}/remove-student`, {student_id: studentId});
+    if (data.success) {
+        showToast(data.message, true);
+        setTimeout(() => location.reload(), 800);
+    } else {
+        showToast(data.message, false);
+    }
+}
+
+async function addAssignment() {
+    const teacher_id = document.getElementById('teacherSelect').value;
+    const subject_id = document.getElementById('subjectSelect').value;
+    if (!teacher_id || !subject_id) return alert('Please select both teacher and subject');
+    const data = await apiPost(`/admin/classrooms/${CLS_ID}/add-assignment`,
+                               {teacher_id: parseInt(teacher_id), subject_id: parseInt(subject_id)});
+    if (data.success) {
+        showToast(data.message, true);
+        setTimeout(() => location.reload(), 800);
+    } else {
+        showToast(data.message, false);
+    }
+}
+
+async function removeAssignment(assignmentId) {
+    if (!confirm('Remove this teacher assignment?')) return;
+    const data = await apiPost(`/admin/classrooms/assignments/${assignmentId}/delete`, {});
+    if (data.success) {
+        showToast(data.message, true);
+        setTimeout(() => location.reload(), 800);
+    } else {
+        showToast(data.message, false);
+    }
+}
+</script>
+{% endblock %}

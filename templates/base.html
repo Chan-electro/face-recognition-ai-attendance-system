@@ -113,6 +113,19 @@
                 <i data-lucide="book-open" class="h-5 w-5"></i> Notes</a>
             
             {% elif session.role == 'TEACHER' %}
+            {% if teacher_classrooms %}
+            <div class="mb-3 px-2">
+                <p class="text-xs font-bold text-muted-foreground/60 uppercase tracking-wider px-2 mb-1.5">Active Classroom</p>
+                <form method="POST" action="{{ url_for('teacher.switch_classroom') }}">
+                    <select name="classroom_id" onchange="this.form.submit()"
+                            class="w-full rounded-lg border border-border bg-secondary/50 px-3 py-2 text-sm font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer">
+                        {% for cls in teacher_classrooms %}
+                        <option value="{{ cls.id }}" {% if cls.id == active_classroom_id %}selected{% endif %}>{{ cls.name }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
+            {% endif %}
             <a href="{{ url_for('teacher.dashboard') }}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'teacher.dashboard' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
                 <i data-lucide="layout-dashboard" class="h-5 w-5"></i> Dashboard</a>
@@ -148,6 +161,9 @@
             <a href="{{ url_for('admin.manage_users') }}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'admin.manage_users' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
                 <i data-lucide="users" class="h-5 w-5"></i> Users</a>
+            <a href="{{ url_for('admin.manage_classrooms') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint in ['admin.manage_classrooms','admin.classroom_detail'] %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                <i data-lucide="layout-grid" class="h-5 w-5"></i> Classrooms</a>
             <a href="{{ url_for('admin.manage_timetable') }}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'admin.manage_timetable' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
                 <i data-lucide="clock" class="h-5 w-5"></i> Timetable</a>
@@ -214,6 +230,18 @@
                 <a href="{{ url_for('student.notes') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'student.notes' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
                     <i data-lucide="book-open" class="h-5 w-5"></i> Notes</a>
                 {% elif session.role == 'TEACHER' %}
+                {% if teacher_classrooms %}
+                <div class="mb-2">
+                    <form method="POST" action="{{ url_for('teacher.switch_classroom') }}">
+                        <select name="classroom_id" onchange="this.form.submit()"
+                                class="w-full rounded-lg border border-border bg-secondary/50 px-3 py-2 text-sm font-semibold text-foreground focus:outline-none cursor-pointer">
+                            {% for cls in teacher_classrooms %}
+                            <option value="{{ cls.id }}" {% if cls.id == active_classroom_id %}selected{% endif %}>{{ cls.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+                {% endif %}
                 <a href="{{ url_for('teacher.dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'teacher.dashboard' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
                     <i data-lucide="layout-dashboard" class="h-5 w-5"></i> Dashboard</a>
                 <a href="{{ url_for('teacher.ai_assistant') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'teacher.ai_assistant' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
@@ -235,6 +263,8 @@
                     <i data-lucide="layout-dashboard" class="h-5 w-5"></i> Dashboard</a>
                 <a href="{{ url_for('admin.manage_users') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'admin.manage_users' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
                     <i data-lucide="users" class="h-5 w-5"></i> Users</a>
+                <a href="{{ url_for('admin.manage_classrooms') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint in ['admin.manage_classrooms','admin.classroom_detail'] %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                    <i data-lucide="layout-grid" class="h-5 w-5"></i> Classrooms</a>
                 <a href="{{ url_for('admin.manage_timetable') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'admin.manage_timetable' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
                     <i data-lucide="clock" class="h-5 w-5"></i> Timetable</a>
                 <a href="{{ url_for('admin.ai_training') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'admin.ai_training' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">

@@ -11,3 +11,5 @@ from models.faculty import Faculty
 from models.timetable import Timetable
 from models.internal_mark import InternalMark
 from models.note import Note
+from models.classroom import Classroom
+from models.teacher_assignment import TeacherAssignment
