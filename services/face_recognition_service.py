@@ -64,7 +64,8 @@ class FaceRecognitionService:
             # Detect face locations
             face_locations = face_recognition.face_locations(
                 image,
-                model=self.detection_model
+                model=self.detection_model,
+                number_of_times_to_upsample=0
             )
             
             return face_locations

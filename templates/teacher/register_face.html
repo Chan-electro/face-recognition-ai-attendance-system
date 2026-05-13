@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!stream) return;
 
         // Resize to max 640px wide — keeps face detection fast on CPU
-        const MAX_W = 640;
+        const MAX_W = 320;
         const scale = Math.min(1, MAX_W / video.videoWidth);
         canvas.width  = Math.round(video.videoWidth  * scale);
         canvas.height = Math.round(video.videoHeight * scale);
@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function () {
         retakeBtn.disabled = true;
         saveBtn.innerHTML  = '<i data-lucide="loader-2" class="mr-2 h-4 w-4 animate-spin"></i> Processing…';
         if (window.lucide) window.lucide.createIcons();
-        setStatus('loader-2', 'Analysing face — this can take up to 30 seconds on first run…', 'bg-primary/10 text-primary');
+        setStatus('loader-2', 'Analysing face, please wait…', 'bg-primary/10 text-primary');
 
         try {
             const res  = await fetch("{{ url_for('teacher.add_face') }}", {
