@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!stream) return;
 
         // Resize to max 640px wide — keeps face detection fast on CPU
-        const MAX_W = 320;
+        const MAX_W = 480;
         const scale = Math.min(1, MAX_W / video.videoWidth);
         canvas.width  = Math.round(video.videoWidth  * scale);
         canvas.height = Math.round(video.videoHeight * scale);
