@@ -158,7 +158,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function setStatus(icon, text, barClass = 'bg-muted/40 text-muted-foreground') {
         statusBar.className = `px-4 py-3 border-t border-border flex items-center gap-2 text-sm ${barClass}`;
-        statusBar.querySelector('i').setAttribute('data-lucide', icon);
+        // lucide replaces <i> with <svg> after first createIcons() call — query for either
+        const existing = statusBar.querySelector('i, svg');
+        const newI = document.createElement('i');
+        newI.setAttribute('data-lucide', icon);
+        newI.className = 'h-4 w-4 shrink-0';
+        if (existing) existing.replaceWith(newI); else statusBar.prepend(newI);
         statusText.textContent = text;
         if (window.lucide) window.lucide.createIcons();
     }
