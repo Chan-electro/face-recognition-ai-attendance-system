@@ -116,24 +116,34 @@ def mark_attendance_page():
 
     return render_template('teacher/mark_attendance.html',
                            user=user, classrooms=classrooms, active_cls=active_cls,
-                           subjects=subjects, students=students)
+                           subjects=subjects, students=students,
+                           today_date=date.today().isoformat())
 
 
 @teacher_bp.route('/mark-attendance', methods=['POST'])
 @role_required('TEACHER')
 def mark_attendance():
     try:
+        from datetime import date as date_type, datetime as datetime_type
         data = request.get_json()
         if not data:
             return jsonify({'success': False, 'message': 'No data provided'}), 400
-        student_id = data.get('student_id')
-        subject_id = data.get('subject_id')
-        status     = data.get('status', 'PRESENT')
+        student_id  = data.get('student_id')
+        subject_id  = data.get('subject_id')
+        status      = data.get('status', 'PRESENT')
+        date_str    = data.get('date')
         if not student_id or not subject_id:
             return jsonify({'success': False, 'message': 'Missing student or subject'}), 400
+        attendance_date = None
+        if date_str:
+            try:
+                attendance_date = datetime_type.strptime(date_str, '%Y-%m-%d').date()
+            except ValueError:
+                return jsonify({'success': False, 'message': 'Invalid date format'}), 400
         attendance = AttendanceService.mark_attendance(
             student_id=student_id, subject_id=subject_id, status=status,
-            marked_by=session.get('user_id'), confidence_score=1.0, is_manual=True)
+            marked_by=session.get('user_id'), confidence_score=1.0, is_manual=True,
+            attendance_date=attendance_date)
         if attendance:
             student = User.query.get(student_id)
             return jsonify({'success': True,

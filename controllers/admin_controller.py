@@ -603,7 +603,7 @@ def manage_classrooms():
             'teacher_count': teacher_count,
         })
     return render_template('admin/manage_classrooms.html',
-                           user=user, classroom_data=classroom_data)
+                           user=user, classrooms=classrooms, classroom_data=classroom_data)
 
 
 @admin_bp.route('/classrooms/add', methods=['POST'])

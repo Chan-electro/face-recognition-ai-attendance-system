@@ -38,6 +38,12 @@
                             class="absolute right-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none"></i>
                     </div>
                 </div>
+                <div class="space-y-2 w-full sm:w-auto">
+                    <label for="attendanceDateInput" class="text-sm font-medium leading-none">Date</label>
+                    <input type="date" id="attendanceDateInput"
+                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                        value="{{ today_date }}" max="{{ today_date }}">
+                </div>
                 <button type="button" id="loadStudentsBtn"
                     class="shadcn-btn shadcn-btn-primary w-full sm:w-auto h-10 px-8 whitespace-nowrap">
                     <i data-lucide="users" class="mr-2 h-4 w-4"></i> Load Students
@@ -202,8 +208,13 @@
 
     async function submitBulkAttendance() {
         const subjectId = document.getElementById('subjectSelect').value;
+        const selectedDate = document.getElementById('attendanceDateInput').value;
         if (!subjectId) {
             showToast('amber-600', 'No subject selected.', 'alert-triangle');
+            return;
+        }
+        if (!selectedDate) {
+            showToast('amber-600', 'Please select a date.', 'alert-triangle');
             return;
         }
 
@@ -231,7 +242,8 @@
                     body: JSON.stringify({
                         student_id: parseInt(studentId),
                         subject_id: parseInt(subjectId),
-                        status: status
+                        status: status,
+                        date: selectedDate
                     })
                 }).then(r => r.json()).then(result => {
                     if (result.success) successCount++;

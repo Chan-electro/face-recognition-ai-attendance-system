@@ -9,36 +9,19 @@ class AttendanceService:
     """Service for attendance calculations and analytics"""
     
     @staticmethod
-    def mark_attendance(student_id, subject_id, status='PRESENT', marked_by=None, 
-                       confidence_score=None, is_manual=False, notes=None):
-        """
-        Mark attendance for a student
-        
-        Args:
-            student_id: Student user ID
-            subject_id: Subject ID
-            status: PRESENT, ABSENT, or LATE
-            marked_by: Teacher user ID who marked attendance
-            confidence_score: Face recognition confidence (if applicable)
-            is_manual: Whether manually marked or via face recognition
-            notes: Optional notes
-            
-        Returns:
-            Attendance object or None if failed
-        """
+    def mark_attendance(student_id, subject_id, status='PRESENT', marked_by=None,
+                       confidence_score=None, is_manual=False, notes=None, attendance_date=None):
         try:
-            today = date.today()
+            target_date = attendance_date if attendance_date else date.today()
             now = datetime.now()
-            
-            # Check if attendance already exists for today
+
             existing = Attendance.query.filter_by(
                 student_id=student_id,
                 subject_id=subject_id,
-                date=today
+                date=target_date
             ).first()
-            
+
             if existing:
-                # Update existing record
                 existing.status = status
                 existing.marked_by = marked_by
                 existing.marked_at = now
@@ -48,11 +31,10 @@ class AttendanceService:
                 existing.notes = notes
                 attendance = existing
             else:
-                # Create new record
                 attendance = Attendance(
                     student_id=student_id,
                     subject_id=subject_id,
-                    date=today,
+                    date=target_date,
                     time=now.time(),
                     status=status,
                     marked_by=marked_by,
@@ -61,10 +43,10 @@ class AttendanceService:
                     notes=notes
                 )
                 db.session.add(attendance)
-            
+
             db.session.commit()
             return attendance
-            
+
         except Exception as e:
             print(f"Error marking attendance: {e}")
             db.session.rollback()
