@@ -74,7 +74,7 @@
         <!-- Preview view -->
         <div id="preview-view" class="relative bg-black aspect-video hidden">
             <img id="photo-preview" src="" alt="Captured face"
-                 class="w-full h-full object-cover" style="transform: scaleX(-1);">
+                 class="w-full h-full object-cover">
             <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white flex justify-between items-end">
                 <div>
                     <p class="text-sm font-bold">Preview</p>
@@ -149,7 +149,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const statusText     = document.getElementById('status-text');
     const statusBar      = document.getElementById('status-bar');
 
-    let stream = null;
+    let stream          = null;
+    let capturedDataUrl = null;
 
     function setStatus(icon, text, barClass = 'bg-muted/40 text-muted-foreground') {
         statusBar.className = `px-4 py-3 border-t border-border flex items-center gap-2 text-sm ${barClass}`;
@@ -178,7 +179,7 @@ document.addEventListener('DOMContentLoaded', function () {
             };
         } catch (err) {
             cameraLoading.classList.add('hidden');
-            setStatus('alert-circle', 'Camera access denied. Please allow camera permissions and refresh.', 'bg-destructive/10 text-destructive');
+            setStatus('alert-circle', 'Camera access denied. Please allow permissions and refresh.', 'bg-destructive/10 text-destructive');
         }
     }
 
@@ -187,25 +188,28 @@ document.addEventListener('DOMContentLoaded', function () {
     captureBtn.addEventListener('click', function () {
         if (!stream) return;
 
-        canvas.width  = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
-        ctx.drawImage(video, 0, 0);
+        // Resize to max 640px wide — keeps face detection fast on CPU
+        const MAX_W = 640;
+        const scale = Math.min(1, MAX_W / video.videoWidth);
+        canvas.width  = Math.round(video.videoWidth  * scale);
+        canvas.height = Math.round(video.videoHeight * scale);
 
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-        photoPreview.src = dataUrl;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        capturedDataUrl  = canvas.toDataURL('image/jpeg', 0.90);
+        photoPreview.src = capturedDataUrl;
 
         cameraView.classList.add('hidden');
         previewView.classList.remove('hidden');
         cameraControls.classList.add('hidden');
         previewControls.classList.remove('hidden');
         previewControls.classList.add('flex');
-        setStatus('info', 'Review the photo — make sure the face is sharp and centred.', 'bg-amber-50 text-amber-700');
+        setStatus('info', 'Review the photo — face should be sharp and centred.', 'bg-amber-50 text-amber-700');
     });
 
     retakeBtn.addEventListener('click', function () {
+        capturedDataUrl = null;
         previewView.classList.add('hidden');
         cameraView.classList.remove('hidden');
         previewControls.classList.add('hidden');
@@ -215,18 +219,19 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     saveBtn.addEventListener('click', async function () {
+        if (!capturedDataUrl) return;
         const originalHTML = saveBtn.innerHTML;
         saveBtn.disabled   = true;
         retakeBtn.disabled = true;
         saveBtn.innerHTML  = '<i data-lucide="loader-2" class="mr-2 h-4 w-4 animate-spin"></i> Processing…';
         if (window.lucide) window.lucide.createIcons();
-        setStatus('loader-2', 'Analysing facial features, please wait…', 'bg-primary/10 text-primary');
+        setStatus('loader-2', 'Analysing face — this can take up to 30 seconds on first run…', 'bg-primary/10 text-primary');
 
         try {
             const res  = await fetch("{{ url_for('admin.add_face') }}", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ student_id: {{ target.id }}, image: photoPreview.src })
+                body: JSON.stringify({ student_id: {{ target.id }}, image: capturedDataUrl })
             });
             const data = await res.json();
 
@@ -235,9 +240,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 saveBtn.innerHTML = '<i data-lucide="check" class="mr-2 h-4 w-4"></i> Saved!';
                 if (window.lucide) window.lucide.createIcons();
                 if (stream) stream.getTracks().forEach(t => t.stop());
-                setTimeout(() => {
-                    window.location.href = "{{ url_for('admin.manage_faces') }}";
-                }, 1400);
+                setTimeout(() => { window.location.href = "{{ url_for('admin.manage_faces') }}"; }, 1400);
             } else {
                 setStatus('x-circle', data.message, 'bg-destructive/10 text-destructive');
                 saveBtn.innerHTML  = originalHTML;

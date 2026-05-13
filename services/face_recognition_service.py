@@ -26,14 +26,14 @@ class FaceRecognitionService:
         self.load_known_encodings()
     
     @staticmethod
-    def _ensure_rgb(image):
-        """Convert image to RGB format if needed (from BGR or other formats)"""
+    def _ensure_rgb(image, source_is_bgr=False):
+        """Convert image to RGB format required by face_recognition library."""
         if isinstance(image, np.ndarray) and len(image.shape) == 3:
-            if image.shape[2] == 4:  # RGBA
+            if image.shape[2] == 4:  # RGBA → RGB
                 image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
-            elif image.shape[2] == 3:
-                # Assume BGR from OpenCV and convert once
+            elif image.shape[2] == 3 and source_is_bgr:  # BGR (OpenCV) → RGB
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            # 3-channel images from PIL/browser are already RGB — no conversion needed
         return image
     
     def load_known_encodings(self):
