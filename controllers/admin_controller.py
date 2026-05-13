@@ -465,6 +465,18 @@ def manage_faces():
     return render_template('admin/manage_faces.html', **context)
 
 
+@admin_bp.route('/register-face/<int:user_id>')
+@role_required('ADMIN')
+def register_face(user_id):
+    admin      = User.query.get(session.get('user_id'))
+    target     = User.query.get_or_404(user_id)
+    encodings  = target.face_encodings.all()
+    return render_template('admin/register_face.html',
+                           user=admin, target=target,
+                           has_encoding=len(encodings) > 0,
+                           encoding_count=len(encodings))
+
+
 @admin_bp.route('/add-face', methods=['POST'])
 @role_required('ADMIN')
 def add_face():

@@ -153,7 +153,10 @@
             <a href="{{ url_for('teacher.upload_marks_page') }}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'teacher.upload_marks_page' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
                 <i data-lucide="upload-cloud" class="h-5 w-5"></i> Upload Marks</a>
-            
+            <a href="{{ url_for('teacher.manage_faces') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint in ['teacher.manage_faces','teacher.register_face'] %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                <i data-lucide="scan-face" class="h-5 w-5"></i> Manage Faces</a>
+
             {% elif session.role == 'ADMIN' %}
             <a href="{{ url_for('admin.dashboard') }}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'admin.dashboard' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
@@ -173,6 +176,9 @@
             <a href="{{ url_for('admin.upload_excel_page') }}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint == 'admin.upload_excel_page' %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
                 <i data-lucide="upload" class="h-5 w-5"></i> Upload Data</a>
+            <a href="{{ url_for('admin.manage_faces') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all {% if request.endpoint in ['admin.manage_faces','admin.register_face'] %}bg-secondary text-primary border-l-4 border-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                <i data-lucide="scan-face" class="h-5 w-5"></i> Manage Faces</a>
             {% endif %}
         </nav>
 
@@ -258,6 +264,8 @@
                     <i data-lucide="edit-3" class="h-5 w-5"></i> Enter Marks</a>
                 <a href="{{ url_for('teacher.upload_marks_page') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'teacher.upload_marks_page' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
                     <i data-lucide="upload-cloud" class="h-5 w-5"></i> Upload Marks</a>
+                <a href="{{ url_for('teacher.manage_faces') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint in ['teacher.manage_faces','teacher.register_face'] %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                    <i data-lucide="scan-face" class="h-5 w-5"></i> Manage Faces</a>
                 {% elif session.role == 'ADMIN' %}
                 <a href="{{ url_for('admin.dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'admin.dashboard' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
                     <i data-lucide="layout-dashboard" class="h-5 w-5"></i> Dashboard</a>
@@ -271,6 +279,8 @@
                     <i data-lucide="brain" class="h-5 w-5"></i> AI Training</a>
                 <a href="{{ url_for('admin.upload_excel_page') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint == 'admin.upload_excel_page' %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
                     <i data-lucide="upload" class="h-5 w-5"></i> Upload Data</a>
+                <a href="{{ url_for('admin.manage_faces') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold {% if request.endpoint in ['admin.manage_faces','admin.register_face'] %}bg-secondary text-primary{% else %}text-muted-foreground hover:bg-secondary/50 hover:text-foreground{% endif %}">
+                    <i data-lucide="scan-face" class="h-5 w-5"></i> Manage Faces</a>
                 {% endif %}
                 <div class="border-t border-border pt-2 mt-2">
                     <a href="{{ url_for('auth.logout') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold text-destructive hover:bg-destructive/10">

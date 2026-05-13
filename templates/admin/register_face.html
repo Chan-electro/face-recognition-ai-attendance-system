@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Register Face — {{ target.full_name }}{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-6 max-w-2xl mx-auto">
+
+    <!-- Breadcrumb / Back -->
+    <div class="flex items-center gap-2 text-sm text-muted-foreground">
+        <a href="{{ url_for('admin.manage_faces') }}"
+           class="flex items-center gap-1 hover:text-foreground transition-colors">
+            <i data-lucide="arrow-left" class="h-4 w-4"></i> Manage Faces
+        </a>
+        <i data-lucide="chevron-right" class="h-4 w-4"></i>
+        <span>Register — {{ target.full_name }}</span>
+    </div>
+
+    <!-- Header -->
+    <div>
+        <h1 class="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <i data-lucide="scan-face" class="h-8 w-8 text-primary"></i>
+            Face Registration
+        </h1>
+        <p class="text-muted-foreground mt-1">
+            Capturing face profile for
+            <strong class="text-foreground">{{ target.full_name }}</strong>
+            <span class="inline-flex items-center gap-1 ml-1 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700 uppercase">{{ target.role }}</span>
+        </p>
+    </div>
+
+    <!-- Status badge -->
+    <div class="flex items-center gap-3">
+        {% if has_encoding %}
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-700 border border-amber-500/20">
+            <i data-lucide="refresh-ccw" class="h-3.5 w-3.5"></i>
+            Updating existing profile ({{ encoding_count }} encoding{{ 's' if encoding_count != 1 }})
+        </span>
+        {% else %}
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-700 border border-blue-500/20">
+            <i data-lucide="user-plus" class="h-3.5 w-3.5"></i>
+            New registration
+        </span>
+        {% endif %}
+    </div>
+
+    <!-- Camera card -->
+    <div class="shadcn-card overflow-hidden">
+
+        <!-- Camera view -->
+        <div id="camera-view"
+             class="relative bg-black aspect-video flex items-center justify-center">
+            <video id="video" class="w-full h-full object-cover hidden" autoplay playsinline
+                   style="transform: scaleX(-1);"></video>
+            <canvas id="canvas" class="hidden"></canvas>
+
+            <div id="camera-loading" class="flex flex-col items-center gap-3 text-white/70">
+                <i data-lucide="loader-2" class="h-10 w-10 animate-spin"></i>
+                <p class="text-sm font-medium">Starting camera…</p>
+            </div>
+
+            <div id="scanner-overlay"
+                 class="absolute inset-x-12 inset-y-8 border-2 border-primary/50 rounded-3xl pointer-events-none hidden">
+                <div class="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-xl"></div>
+                <div class="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-xl"></div>
+                <div class="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-xl"></div>
+                <div class="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-xl"></div>
+                <div class="absolute top-3 right-4 flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-md">
+                    <div class="h-2 w-2 rounded-full bg-red-500 animate-pulse"></div>
+                    LIVE
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview view -->
+        <div id="preview-view" class="relative bg-black aspect-video hidden">
+            <img id="photo-preview" src="" alt="Captured face"
+                 class="w-full h-full object-cover" style="transform: scaleX(-1);">
+            <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white flex justify-between items-end">
+                <div>
+                    <p class="text-sm font-bold">Preview</p>
+                    <p class="text-xs opacity-75">Make sure the face is clear and centred</p>
+                </div>
+                <i data-lucide="check-circle-2" class="h-6 w-6 text-green-400"></i>
+            </div>
+        </div>
+
+        <!-- Status bar -->
+        <div id="status-bar" class="px-4 py-3 bg-muted/40 border-t border-border flex items-center gap-2 text-sm text-muted-foreground">
+            <i data-lucide="info" class="h-4 w-4 text-sky-500 shrink-0"></i>
+            <span id="status-text">Position the user's face clearly within the frame.</span>
+        </div>
+
+        <!-- Controls -->
+        <div class="p-4 border-t border-border flex flex-col sm:flex-row gap-3">
+            <div id="camera-controls" class="flex gap-3 w-full">
+                <button id="capture-btn"
+                        class="shadcn-btn shadcn-btn-primary flex-1 disabled:opacity-40"
+                        disabled>
+                    <i data-lucide="aperture" class="mr-2 h-4 w-4"></i> Capture Photo
+                </button>
+                <a href="{{ url_for('admin.manage_faces') }}"
+                   class="shadcn-btn shadcn-btn-outline">
+                    Cancel
+                </a>
+            </div>
+            <div id="preview-controls" class="hidden flex gap-3 w-full">
+                <button id="save-btn"
+                        class="shadcn-btn bg-green-600 text-white hover:bg-green-700 flex-1">
+                    <i data-lucide="save" class="mr-2 h-4 w-4"></i> Save Profile
+                </button>
+                <button id="retake-btn" class="shadcn-btn shadcn-btn-outline">
+                    <i data-lucide="refresh-ccw" class="mr-2 h-4 w-4"></i> Retake
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tips -->
+    <div class="shadcn-card p-4">
+        <h3 class="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+            <i data-lucide="lightbulb" class="h-4 w-4 text-amber-500"></i> Tips for a good capture
+        </h3>
+        <ul class="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+            <li>Ensure the face is well-lit and free from shadows</li>
+            <li>Look directly at the camera</li>
+            <li>Remove glasses, masks, or anything covering the face</li>
+            <li>Only one face should be visible in the frame</li>
+        </ul>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const video          = document.getElementById('video');
+    const canvas         = document.getElementById('canvas');
+    const photoPreview   = document.getElementById('photo-preview');
+    const cameraView     = document.getElementById('camera-view');
+    const previewView    = document.getElementById('preview-view');
+    const cameraControls = document.getElementById('camera-controls');
+    const previewControls= document.getElementById('preview-controls');
+    const captureBtn     = document.getElementById('capture-btn');
+    const retakeBtn      = document.getElementById('retake-btn');
+    const saveBtn        = document.getElementById('save-btn');
+    const cameraLoading  = document.getElementById('camera-loading');
+    const scannerOverlay = document.getElementById('scanner-overlay');
+    const statusText     = document.getElementById('status-text');
+    const statusBar      = document.getElementById('status-bar');
+
+    let stream = null;
+
+    function setStatus(icon, text, barClass = 'bg-muted/40 text-muted-foreground') {
+        statusBar.className = `px-4 py-3 border-t border-border flex items-center gap-2 text-sm ${barClass}`;
+        statusBar.querySelector('i').setAttribute('data-lucide', icon);
+        statusText.textContent = text;
+        if (window.lucide) window.lucide.createIcons();
+    }
+
+    async function startCamera() {
+        try {
+            cameraLoading.classList.remove('hidden');
+            video.classList.add('hidden');
+            scannerOverlay.classList.add('hidden');
+            captureBtn.disabled = true;
+
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }
+            });
+            video.srcObject = stream;
+            video.onloadedmetadata = () => {
+                cameraLoading.classList.add('hidden');
+                video.classList.remove('hidden');
+                scannerOverlay.classList.remove('hidden');
+                captureBtn.disabled = false;
+                setStatus('info', "Position the user's face clearly within the frame.");
+            };
+        } catch (err) {
+            cameraLoading.classList.add('hidden');
+            setStatus('alert-circle', 'Camera access denied. Please allow camera permissions and refresh.', 'bg-destructive/10 text-destructive');
+        }
+    }
+
+    startCamera();
+
+    captureBtn.addEventListener('click', function () {
+        if (!stream) return;
+
+        canvas.width  = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+        photoPreview.src = dataUrl;
+
+        cameraView.classList.add('hidden');
+        previewView.classList.remove('hidden');
+        cameraControls.classList.add('hidden');
+        previewControls.classList.remove('hidden');
+        previewControls.classList.add('flex');
+        setStatus('info', 'Review the photo — make sure the face is sharp and centred.', 'bg-amber-50 text-amber-700');
+    });
+
+    retakeBtn.addEventListener('click', function () {
+        previewView.classList.add('hidden');
+        cameraView.classList.remove('hidden');
+        previewControls.classList.add('hidden');
+        previewControls.classList.remove('flex');
+        cameraControls.classList.remove('hidden');
+        setStatus('info', "Position the user's face clearly within the frame.");
+    });
+
+    saveBtn.addEventListener('click', async function () {
+        const originalHTML = saveBtn.innerHTML;
+        saveBtn.disabled   = true;
+        retakeBtn.disabled = true;
+        saveBtn.innerHTML  = '<i data-lucide="loader-2" class="mr-2 h-4 w-4 animate-spin"></i> Processing…';
+        if (window.lucide) window.lucide.createIcons();
+        setStatus('loader-2', 'Analysing facial features, please wait…', 'bg-primary/10 text-primary');
+
+        try {
+            const res  = await fetch("{{ url_for('admin.add_face') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ student_id: {{ target.id }}, image: photoPreview.src })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                setStatus('check-circle-2', data.message, 'bg-green-100 text-green-700');
+                saveBtn.innerHTML = '<i data-lucide="check" class="mr-2 h-4 w-4"></i> Saved!';
+                if (window.lucide) window.lucide.createIcons();
+                if (stream) stream.getTracks().forEach(t => t.stop());
+                setTimeout(() => {
+                    window.location.href = "{{ url_for('admin.manage_faces') }}";
+                }, 1400);
+            } else {
+                setStatus('x-circle', data.message, 'bg-destructive/10 text-destructive');
+                saveBtn.innerHTML  = originalHTML;
+                saveBtn.disabled   = false;
+                retakeBtn.disabled = false;
+                if (window.lucide) window.lucide.createIcons();
+            }
+        } catch (err) {
+            setStatus('alert-triangle', 'Network error — please try again.', 'bg-destructive/10 text-destructive');
+            saveBtn.innerHTML  = originalHTML;
+            saveBtn.disabled   = false;
+            retakeBtn.disabled = false;
+            if (window.lucide) window.lucide.createIcons();
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -526,3 +526,79 @@ def ai_assistant():
     """Teacher AI Assistant Interface"""
     user = User.query.get(session.get('user_id'))
     return render_template('teacher/ai_assistant.html', user=user)
+
+
+@teacher_bp.route('/manage-faces')
+@role_required('TEACHER')
+def manage_faces():
+    teacher_id = session.get('user_id')
+    user       = User.query.get(teacher_id)
+    active_cls = _get_active_classroom(teacher_id)
+    students   = (active_cls.students.filter_by(is_active=True).order_by(User.full_name).all()
+                  if active_cls else [])
+    student_faces = []
+    for s in students:
+        encodings = s.face_encodings.all()
+        student_faces.append({
+            'student': s,
+            'has_encoding': len(encodings) > 0,
+            'encoding_count': len(encodings)
+        })
+    return render_template('teacher/manage_faces.html',
+                           user=user, student_faces=student_faces, active_cls=active_cls)
+
+
+@teacher_bp.route('/register-face/<int:student_id>')
+@role_required('TEACHER')
+def register_face(student_id):
+    teacher_id = session.get('user_id')
+    user       = User.query.get(teacher_id)
+    student    = User.query.get_or_404(student_id)
+    encodings  = student.face_encodings.all()
+    return render_template('teacher/register_face.html',
+                           user=user, student=student,
+                           has_encoding=len(encodings) > 0,
+                           encoding_count=len(encodings))
+
+
+@teacher_bp.route('/add-face', methods=['POST'])
+@role_required('TEACHER')
+def add_face():
+    try:
+        from flask import current_app
+        from services.face_recognition_service import get_face_service
+        import os, uuid
+        from PIL import Image
+
+        data       = request.get_json()
+        student_id = data.get('student_id')
+        image_data = data.get('image')
+
+        if not student_id or not image_data:
+            return jsonify({'success': False, 'message': 'Missing required fields'}), 400
+
+        face_service = get_face_service(current_app.config)
+        image        = face_service.process_base64_image(image_data)
+
+        if image is None:
+            return jsonify({'success': False, 'message': 'Invalid image data'}), 400
+
+        filename = f"user_{student_id}_{uuid.uuid4().hex}.jpg"
+        filepath = os.path.join(current_app.config['FACE_IMAGES_FOLDER'], filename)
+        Image.fromarray(image).save(filepath)
+
+        face_enc = face_service.save_face_encoding(
+            user_id=student_id, image=image, image_path=filename, is_primary=True)
+
+        if face_enc:
+            registered_user = User.query.get(student_id)
+            return jsonify({'success': True,
+                            'message': f'Face encoding saved for {registered_user.full_name}'})
+        else:
+            if os.path.exists(filepath):
+                os.remove(filepath)
+            return jsonify({'success': False,
+                            'message': 'No face detected or multiple faces in image'}), 400
+    except Exception as e:
+        print(f"Error adding face: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
